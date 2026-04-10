@@ -498,7 +498,14 @@
         </div>
     </div>
 
+    <script src="js/common.js"></script>
     <script>
+        // Initialize multi-language tabs and sidebar on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSidebar('content');
+            initMultiLangTabs();
+        });
+        
         // Mobile menu toggle
         document.getElementById('mobile-menu-button').addEventListener('click', function() {
             const sidebar = document.getElementById('sidebar');

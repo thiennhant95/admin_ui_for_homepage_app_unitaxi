@@ -488,17 +488,13 @@
         </div>
     </div>
 
+    <script src="js/common.js"></script>
     <script>
-        // Modal helper functions
-        function showModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
-            document.getElementById(modalId).classList.add('flex');
-        }
-        
-        function hideModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-            document.getElementById(modalId).classList.remove('flex');
-        }
+        // Initialize multi-language tabs and sidebar on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSidebar('services');
+            initMultiLangTabs();
+        });
         
         // Mobile menu toggle
         document.getElementById('mobile-menu-button').addEventListener('click', function() {
