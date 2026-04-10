@@ -349,12 +349,61 @@
             </div>
             <div class="p-6">
                 <form id="content-form">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                            <input type="text" id="content-title" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter content title">
+                    <!-- Multi-language Title -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="flex border-b bg-gray-50">
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600 border-blue-200" data-field="content-title" data-lang="vi">
+                                    <span class="mr-1">🇻🇳</span> Vietnamese
+                                </button>
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" data-field="content-title" data-lang="en">
+                                    <span class="mr-1">🇺🇸</span> English
+                                </button>
+                            </div>
+                            <div class="p-3 relative">
+                                <input type="text" id="content-title-vi" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Nhập tiêu đề nội dung">
+                                <input type="text" id="content-title-en" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" placeholder="Enter content title">
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">
+                                        ⚠ Required • English will fallback to Vietnamese if empty
+                                    </span>
+                                    <button type="button" class="copy-from-vi-btn text-xs text-blue-600 hover:text-blue-800 flex items-center" data-field="content-title">
+                                        <i class="fas fa-copy mr-1"></i> Copy from Vietnamese
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        
+                    </div>
+                    
+                    <!-- Multi-language Content (for Article type) -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="flex border-b bg-gray-50">
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600 border-blue-200" data-field="content-body" data-lang="vi">
+                                    <span class="mr-1">🇻🇳</span> Vietnamese
+                                </button>
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" data-field="content-body" data-lang="en">
+                                    <span class="mr-1">🇺🇸</span> English
+                                </button>
+                            </div>
+                            <div class="p-3 relative">
+                                <textarea id="content-body-vi" rows="5" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Nhập nội dung bài viết"></textarea>
+                                <textarea id="content-body-en" rows="5" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" placeholder="Enter article content"></textarea>
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">
+                                        Optional • English will fallback to Vietnamese if empty
+                                    </span>
+                                    <button type="button" class="copy-from-vi-btn text-xs text-blue-600 hover:text-blue-800 flex items-center" data-field="content-body">
+                                        <i class="fas fa-copy mr-1"></i> Copy from Vietnamese
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <select id="content-category" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -388,7 +437,7 @@
                             </div>
                         </div>
                         
-                        <div class="col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                             <textarea id="content-description" rows="3" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter content description"></textarea>
                         </div>
@@ -516,11 +565,18 @@
         document.getElementById('content-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const contentTitle = document.getElementById('content-title').value;
-            alert(`Content "${contentTitle}" has been saved successfully!`);
+            // Validate multi-language fields
+            if (!validateMultiLangField('content-title', 'Content Title')) {
+                return;
+            }
+            
+            const titleValues = getMultiLangValues('content-title');
+            const bodyValues = getMultiLangValues('content-body');
+            
+            alert(`Content saved successfully!\nVietnamese: ${titleValues.vi}\nEnglish: ${titleValues.en || '(fallback to Vietnamese)'}`);
             
             // Close modal
-            document.getElementById('content-modal').classList.add('hidden');
+            hideModal('content-modal');
         });
         
         // Edit button functionality
@@ -530,7 +586,7 @@
                 const contentTitle = row.children[1].textContent;
                 
                 // Populate form with row data
-                document.getElementById('content-title').value = contentTitle;
+                document.getElementById('content-title-vi').value = contentTitle;
                 
                 // Set category based on badge text
                 const categoryText = row.children[2].firstElementChild.textContent.toLowerCase();
@@ -552,7 +608,7 @@
                 document.getElementById('modal-title').textContent = 'Edit Content';
                 
                 // Show modal
-                document.getElementById('content-modal').classList.remove('hidden');
+                showModal('content-modal');
             });
         });
         

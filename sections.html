@@ -361,12 +361,61 @@
             </div>
             <div class="p-6">
                 <form id="section-form">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Section Name</label>
-                            <input type="text" id="section-name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter section name">
+                    <!-- Multi-language Title -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="flex border-b bg-gray-50">
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600 border-blue-200" data-field="section-title" data-lang="vi">
+                                    <span class="mr-1">🇻🇳</span> Vietnamese
+                                </button>
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" data-field="section-title" data-lang="en">
+                                    <span class="mr-1">🇺🇸</span> English
+                                </button>
+                            </div>
+                            <div class="p-3 relative">
+                                <input type="text" id="section-title-vi" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Nhập tiêu đề phần">
+                                <input type="text" id="section-title-en" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" placeholder="Enter section title">
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">
+                                        ⚠ Required • English will fallback to Vietnamese if empty
+                                    </span>
+                                    <button type="button" class="copy-from-vi-btn text-xs text-blue-600 hover:text-blue-800 flex items-center" data-field="section-title">
+                                        <i class="fas fa-copy mr-1"></i> Copy from Vietnamese
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        
+                    </div>
+                    
+                    <!-- Multi-language Subtitle -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Section Subtitle</label>
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="flex border-b bg-gray-50">
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600 border-blue-200" data-field="section-subtitle" data-lang="vi">
+                                    <span class="mr-1">🇻🇳</span> Vietnamese
+                                </button>
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" data-field="section-subtitle" data-lang="en">
+                                    <span class="mr-1">🇺🇸</span> English
+                                </button>
+                            </div>
+                            <div class="p-3 relative">
+                                <input type="text" id="section-subtitle-vi" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Nhập phụ đề">
+                                <input type="text" id="section-subtitle-en" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" placeholder="Enter subtitle">
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">
+                                        Optional • English will fallback to Vietnamese if empty
+                                    </span>
+                                    <button type="button" class="copy-from-vi-btn text-xs text-blue-600 hover:text-blue-800 flex items-center" data-field="section-subtitle">
+                                        <i class="fas fa-copy mr-1"></i> Copy from Vietnamese
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Section Type</label>
                             <select id="section-type" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -666,7 +715,7 @@
                 const sectionName = row.children[0].textContent;
                 
                 // Populate form with row data
-                document.getElementById('section-name').value = sectionName;
+                document.getElementById('section-title-vi').value = sectionName;
                 document.getElementById('modal-title').textContent = 'Edit Section';
                 
                 // Get section type from badge
@@ -685,9 +734,16 @@
         document.getElementById('section-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Validate multi-language fields
+            if (!validateMultiLangField('section-title', 'Section Title')) {
+                return;
+            }
+            
             // Get form values
-            const sectionName = document.getElementById('section-name').value;
-            alert(`Changes to section "${sectionName}" have been saved!`);
+            const titleValues = getMultiLangValues('section-title');
+            const subtitleValues = getMultiLangValues('section-subtitle');
+            
+            alert(`Changes saved!\nVietnamese Title: ${titleValues.vi}\nEnglish Title: ${titleValues.en || '(fallback to Vietnamese)'}`);
             
             // Close modal
             hideModal('section-modal');

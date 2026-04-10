@@ -64,6 +64,118 @@ function renderSidebar(currentPage) {
     document.getElementById('sidebar').innerHTML = sidebarHTML;
 }
 
+// Multi-language Tab Component Generator
+function createMultiLangTabs(fieldId, fieldLabel, fieldType = 'input', options = {}) {
+    const viValue = options.vi || '';
+    const enValue = options.en || '';
+    const placeholder = options.placeholder || '';
+    const required = options.required !== false; // default true
+    const rows = options.rows || 4;
+    
+    const inputHtml = fieldType === 'textarea' 
+        ? `<textarea id="${fieldId}-vi" rows="${rows}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="${placeholder}">${viValue}</textarea>
+           <textarea id="${fieldId}-en" rows="${rows}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" placeholder="${placeholder}">${enValue}</textarea>`
+        : `<input type="text" id="${fieldId}-vi" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="${placeholder}" value="${viValue}">
+           <input type="text" id="${fieldId}-en" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" placeholder="${placeholder}" value="${enValue}">`;
+    
+    return `
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">${fieldLabel}</label>
+            <div class="border rounded-lg overflow-hidden">
+                <div class="flex border-b bg-gray-50">
+                    <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600 border-blue-200" data-field="${fieldId}" data-lang="vi">
+                        <span class="mr-1">🇻🇳</span> Vietnamese
+                    </button>
+                    <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" data-field="${fieldId}" data-lang="en">
+                        <span class="mr-1">🇺🇸</span> English
+                    </button>
+                </div>
+                <div class="p-3 relative">
+                    ${inputHtml}
+                    <div class="mt-2 flex items-center justify-between">
+                        <span class="text-xs text-gray-500">
+                            ${required ? '⚠ Required' : 'Optional'}
+                            ${fieldId.endsWith('-en') || !fieldId.includes('-vi') ? '' : '• English will fallback to Vietnamese if empty'}
+                        </span>
+                        <button type="button" class="copy-from-vi-btn text-xs text-blue-600 hover:text-blue-800 flex items-center" data-field="${fieldId}">
+                            <i class="fas fa-copy mr-1"></i> Copy from Vietnamese
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Initialize multi-language tabs event listeners
+function initMultiLangTabs() {
+    // Handle tab switching
+    document.querySelectorAll('.lang-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const fieldId = this.dataset.field;
+            const lang = this.dataset.lang;
+            
+            // Update tab styles
+            const container = this.closest('.border.rounded-lg');
+            container.querySelectorAll('.lang-tab-btn').forEach(b => {
+                b.classList.remove('bg-white', 'text-blue-600', 'border-blue-200');
+                b.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            this.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            this.classList.add('bg-white', 'text-blue-600', 'border-blue-200');
+            
+            // Show/hide inputs
+            document.getElementById(`${fieldId}-vi`).classList.toggle('hidden', lang !== 'vi');
+            document.getElementById(`${fieldId}-en`).classList.toggle('hidden', lang !== 'en');
+        });
+    });
+    
+    // Handle copy from Vietnamese
+    document.querySelectorAll('.copy-from-vi-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const fieldId = this.dataset.field;
+            const viInput = document.getElementById(`${fieldId}-vi`);
+            const enInput = document.getElementById(`${fieldId}-en`);
+            
+            if (viInput && enInput) {
+                enInput.value = viInput.value;
+                
+                // Visual feedback
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 1500);
+            }
+        });
+    });
+}
+
+// Get multi-language field values
+function getMultiLangValues(fieldId) {
+    const viInput = document.getElementById(`${fieldId}-vi`);
+    const enInput = document.getElementById(`${fieldId}-en`);
+    
+    return {
+        vi: viInput ? viInput.value.trim() : '',
+        en: enInput ? enInput.value.trim() : ''
+    };
+}
+
+// Validate multi-language field (Vietnamese required)
+function validateMultiLangField(fieldId, fieldName) {
+    const values = getMultiLangValues(fieldId);
+    
+    if (!values.vi) {
+        alert(`${fieldName}: Vietnamese translation is required!`);
+        if (document.getElementById(`${fieldId}-vi`)) {
+            document.getElementById(`${fieldId}-vi`).focus();
+        }
+        return false;
+    }
+    return true;
+}
+
 // Hàm hiển thị modal ở giữa màn hình
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -79,6 +191,9 @@ function showModal(modalId) {
             modalDialog.style.left = '50%';
             modalDialog.style.transform = 'translate(-50%, -50%)';
         }
+        
+        // Initialize multi-language tabs after showing modal
+        setTimeout(() => initMultiLangTabs(), 100);
     }
 }
 

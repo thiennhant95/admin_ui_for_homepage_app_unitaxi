@@ -207,12 +207,34 @@
             </div>
             <div class="p-6">
                 <form id="banner-form">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Title</label>
-                            <input type="text" id="banner-title" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter banner title">
+                    <!-- Multi-language Banner Title -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Banner Title</label>
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="flex border-b bg-gray-50">
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600 border-blue-200" data-field="banner-title" data-lang="vi">
+                                    <span class="mr-1">🇻🇳</span> Vietnamese
+                                </button>
+                                <button type="button" class="lang-tab-btn flex-1 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100" data-field="banner-title" data-lang="en">
+                                    <span class="mr-1">🇺🇸</span> English
+                                </button>
+                            </div>
+                            <div class="p-3 relative">
+                                <input type="text" id="banner-title-vi" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Nhập tiêu đề banner">
+                                <input type="text" id="banner-title-en" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" placeholder="Enter banner title">
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">
+                                        ⚠ Required • English will fallback to Vietnamese if empty
+                                    </span>
+                                    <button type="button" class="copy-from-vi-btn text-xs text-blue-600 hover:text-blue-800 flex items-center" data-field="banner-title">
+                                        <i class="fas fa-copy mr-1"></i> Copy from Vietnamese
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tracking ID</label>
                             <input type="text" id="tracking-id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter tracking ID">
@@ -350,8 +372,13 @@
         document.getElementById('banner-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const bannerTitle = document.getElementById('banner-title').value;
-            alert(`Banner "${bannerTitle}" has been saved successfully!`);
+            // Validate multi-language fields
+            if (!validateMultiLangField('banner-title', 'Banner Title')) {
+                return;
+            }
+            
+            const titleValues = getMultiLangValues('banner-title');
+            alert(`Banner saved successfully!\nVietnamese: ${titleValues.vi}\nEnglish: ${titleValues.en || '(fallback to Vietnamese)'}`);
             
             // Close modal
             hideModal('banner-modal');
@@ -364,7 +391,7 @@
                 const bannerTitle = row.children[1].textContent;
                 
                 // Populate form with row data
-                document.getElementById('banner-title').value = bannerTitle;
+                document.getElementById('banner-title-vi').value = bannerTitle;
                 document.getElementById('tracking-id').value = row.children[2].textContent;
                 
                 // Set date values
