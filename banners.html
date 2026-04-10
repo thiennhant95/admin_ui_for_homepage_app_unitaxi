@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(-100%); }
+        .status-active { background-color: #dcfce7; color: #166534; }
+        .status-scheduled { background-color: #fffbeb; color: #854d0e; }
+        .status-expired { background-color: #fee2e2; color: #b91c1c; }
+        .image-preview {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+    <!-- Mobile sidebar toggle -->
+    <div class="md:hidden fixed top-4 left-4 z-30">
+        <button id="mobile-menu-button" class="p-2 rounded-md text-white bg-blue-600">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-blue-800 text-white fixed h-full z-20 transition-transform duration-300">
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 ml-64 overflow-auto">
+        <!-- Top bar -->
+        <header class="bg-white shadow-sm">
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">Banner Management</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <select class="bg-gray-100 rounded-lg py-2 px-3 appearance-none pr-8">
+                            <option>Vietnamese (vi)</option>
+                            <option>English (en)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Banner content -->
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Manage Banners</h3>
+                    <p class="text-gray-600 text-sm">Control promotional banners on the home screen</p>
+                </div>
+                <button id="add-banner-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add New Banner
+                </button>
+            </div>
+            
+            <!-- Banner table -->
+            <div class="bg-white rounded-xl shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x40/3b82f6/FFFFFF?text=Banner" alt="Banner Preview" class="image-preview">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">Summer Promotion</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">BNR-001</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 1, 2023 09:00 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 30, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x40/10b981/FFFFFF?text=New+App" alt="Banner Preview" class="image-preview">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">New App Features</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">BNR-002</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 10, 2023 10:00 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jul 15, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-scheduled px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Scheduled</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x40/f59e0b/FFFFFF?text=Discount" alt="Banner Preview" class="image-preview">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">50% Off Special</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">BNR-003</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 1, 2023 08:00 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 30, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-expired px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Expired</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x40/8b5cf6/FFFFFF?text=VIP" alt="Banner Preview" class="image-preview">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">VIP Exclusive Offer</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">BNR-004</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 5, 2023 12:00 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Aug 5, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Banner Detail Modal -->
+    <div id="banner-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-center bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+            <div class="border-b p-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-semibold">Add New Banner</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="banner-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Title</label>
+                            <input type="text" id="banner-title" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter banner title">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tracking ID</label>
+                            <input type="text" id="tracking-id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter tracking ID">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Image Upload</label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-md">
+                                <div class="space-y-1 text-center">
+                                    <div class="flex text-sm text-gray-600 justify-center">
+                                        <label for="banner-image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                            <span>Upload an image</span>
+                                            <input id="banner-image" name="banner-image" type="file" class="sr-only">
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                            <input type="datetime-local" id="start-time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                            <input type="datetime-local" id="end-time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Action Configuration</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Target</label>
+                                <select id="action-target" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="screen">Screen</option>
+                                    <option value="webview">Web View</option>
+                                    <option value="external">External Link</option>
+                                    <option value="deeplink">Deep Link</option>
+                                    <option value="store">App Store</option>
+                                </select>
+                            </div>
+                            
+                            <div id="screen-name-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Screen Name</label>
+                                <input type="text" id="screen-name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter screen name">
+                            </div>
+                            
+                            <div id="resource-id-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Resource ID</label>
+                                <input type="text" id="resource-id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter resource ID">
+                            </div>
+                            
+                            <div id="url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                                <input type="url" id="url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter URL">
+                            </div>
+                            
+                            <div id="fallback-url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fallback URL</label>
+                                <input type="url" id="fallback-url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter fallback URL">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Banner</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        // Khởi tạo sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSidebar('banners');
+        });
+        
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            // Toggle class để chuyển đổi ẩn/hiện sidebar trên mobile
+            sidebar.classList.toggle('-translate-x-full');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.style.display = 'none';
+            } else {
+                sidebar.style.display = 'block';
+            }
+        });
+        
+        // Show modal when adding new banner
+        document.getElementById('add-banner-btn').addEventListener('click', function() {
+            document.getElementById('modal-title').textContent = 'Add New Banner';
+            document.getElementById('banner-form').reset();
+            showModal('banner-modal');
+        });
+        
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', function() {
+            hideModal('banner-modal');
+        });
+        
+        document.getElementById('cancel-btn').addEventListener('click', function() {
+            hideModal('banner-modal');
+        });
+        
+        // Handle action target change
+        document.getElementById('action-target').addEventListener('change', function() {
+            const target = this.value;
+            
+            // Hide all conditional fields
+            document.getElementById('screen-name-field').classList.add('hidden');
+            document.getElementById('resource-id-field').classList.add('hidden');
+            document.getElementById('url-field').classList.add('hidden');
+            document.getElementById('fallback-url-field').classList.add('hidden');
+            
+            // Show relevant fields based on target
+            if (target === 'screen') {
+                document.getElementById('screen-name-field').classList.remove('hidden');
+                document.getElementById('resource-id-field').classList.remove('hidden');
+            } else if (target === 'webview' || target === 'external') {
+                document.getElementById('url-field').classList.remove('hidden');
+                document.getElementById('fallback-url-field').classList.remove('hidden');
+            } else if (target === 'deeplink' || target === 'store') {
+                document.getElementById('url-field').classList.remove('hidden');
+            }
+        });
+        
+        // Form submission
+        document.getElementById('banner-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const bannerTitle = document.getElementById('banner-title').value;
+            alert(`Banner "${bannerTitle}" has been saved successfully!`);
+            
+            // Close modal
+            hideModal('banner-modal');
+        });
+        
+        // Edit button functionality
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const bannerTitle = row.children[1].textContent;
+                
+                // Populate form with row data
+                document.getElementById('banner-title').value = bannerTitle;
+                document.getElementById('tracking-id').value = row.children[2].textContent;
+                
+                // Set date values
+                const startDate = new Date(row.children[3].textContent);
+                const endDate = new Date(row.children[4].textContent);
+                
+                // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
+                document.getElementById('start-time').value = startDate.toISOString().slice(0, 16);
+                document.getElementById('end-time').value = endDate.toISOString().slice(0, 16);
+                
+                // Set modal title
+                document.getElementById('modal-title').textContent = 'Edit Banner';
+                
+                // Show modal
+                showModal('banner-modal');
+            });
+        });
+        
+        // Delete button functionality
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const bannerTitle = row.children[1].textContent;
+                
+                if(confirm(`Are you sure you want to delete banner "${bannerTitle}"?`)) {
+                    row.remove();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(-100%); }
+        .draggable { transition: transform 0.2s; }
+        .drag-over { border: 2px dashed #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .recommended-col { border-left: 3px solid #3b82f6; }
+        .other-col { border-left: 3px solid #94a3b8; }
+        .status-active { background-color: #dcfce7; color: #166534; }
+        .status-inactive { background-color: #fee2e2; color: #b91c1c; }
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+    <!-- Mobile sidebar toggle -->
+    <div class="md:hidden fixed top-4 left-4 z-30">
+        <button id="mobile-menu-button" class="p-2 rounded-md text-white bg-blue-600">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-blue-800 text-white fixed h-full z-20 transition-transform duration-300">
+        <div class="p-5 flex items-center border-b border-blue-700">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <i class="fas fa-taxi text-xl"></i>
+            </div>
+            <h1 class="text-xl font-bold ml-3">Home Screen Admin</h1>
+        </div>
+        
+        <nav class="p-3">
+            <ul class="space-y-1">
+                <li>
+                    <a href="index.html" class="dashboard-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="sections.html" class="sections-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-th-large mr-3"></i> Home Sections
+                    </a>
+                </li>
+                <li>
+                    <a href="banners.html" class="banners-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-image mr-3"></i> Banner Management
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="services-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white">
+                        <i class="fas fa-concierge-bell mr-3"></i> Services Management
+                    </a>
+                </li>
+                <li>
+                    <a href="content.html" class="content-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-newspaper mr-3"></i> Content Management
+                    </a>
+                </li>
+                <li>
+                    <a href="bubble.html" class="bubble-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-circle mr-3"></i> Floating Bubble
+                    </a>
+                </li>
+                <li>
+                    <a href="config.html" class="config-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-cog mr-3"></i> App Config
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="absolute bottom-0 w-full p-4 border-t border-blue-700">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="font-medium">Admin User</p>
+                    <p class="text-sm text-blue-300">admin@rideapp.com</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 ml-64 overflow-auto">
+        <!-- Top bar -->
+        <header class="bg-white shadow-sm">
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">Services Management</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <select class="bg-gray-100 rounded-lg py-2 px-3 appearance-none pr-8">
+                            <option>Vietnamese (vi)</option>
+                            <option>English (en)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Services content -->
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Manage Services</h3>
+                    <p class="text-gray-600 text-sm">Control services displayed on the home screen</p>
+                </div>
+                <button id="add-service-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add New Service
+                </button>
+            </div>
+            
+            <!-- Services layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Recommended Services Column -->
+                <div class="recommended-col bg-white rounded-xl shadow p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">Recommended for you</h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">12 items</span>
+                    </div>
+                    
+                    <div id="recommended-services" class="space-y-4">
+                        <div class="draggable service-item flex items-center p-3 border rounded-lg" data-id="1">
+                            <div class="service-icon">
+                                <i class="fas fa-car text-lg"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="font-medium">Ride Booking</div>
+                                <div class="text-sm text-gray-500">Book a ride instantly</div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="relative inline-flex items-center cursor-pointer mr-4">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                                <button class="text-gray-500 hover:text-gray-700 move-up-btn">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-900 ml-3 edit-btn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-900 ml-2 delete-btn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable service-item flex items-center p-3 border rounded-lg" data-id="2">
+                            <div class="service-icon">
+                                <i class="fas fa-truck text-lg"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="font-medium">Food Delivery</div>
+                                <div class="text-sm text-gray-500">Delicious meals delivered</div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="relative inline-flex items-center cursor-pointer mr-4">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                                <button class="text-gray-500 hover:text-gray-700 move-up-btn">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-900 ml-3 edit-btn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-900 ml-2 delete-btn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable service-item flex items-center p-3 border rounded-lg" data-id="3">
+                            <div class="service-icon">
+                                <i class="fas fa-box text-lg"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="font-medium">Package Delivery</div>
+                                <div class="text-sm text-gray-500">Send packages safely</div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="relative inline-flex items-center cursor-pointer mr-4">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                                <button class="text-gray-500 hover:text-gray-700 move-up-btn">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-900 ml-3 edit-btn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-900 ml-2 delete-btn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other Services Column -->
+                <div class="other-col bg-white rounded-xl shadow p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">Other Services</h3>
+                        <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">8 items</span>
+                    </div>
+                    
+                    <div id="other-services" class="space-y-4">
+                        <div class="draggable service-item flex items-center p-3 border rounded-lg" data-id="4">
+                            <div class="service-icon">
+                                <i class="fas fa-money-bill-wave text-lg"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="font-medium">Digital Wallet</div>
+                                <div class="text-sm text-gray-500">Manage your payments</div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="relative inline-flex items-center cursor-pointer mr-4">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                                <button class="text-gray-500 hover:text-gray-700 move-up-btn">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-900 ml-3 edit-btn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-900 ml-2 delete-btn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable service-item flex items-center p-3 border rounded-lg" data-id="5">
+                            <div class="service-icon">
+                                <i class="fas fa-store text-lg"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="font-medium">Grocery Shopping</div>
+                                <div class="text-sm text-gray-500">Fresh groceries delivered</div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="relative inline-flex items-center cursor-pointer mr-4">
+                                    <input type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                                <button class="text-gray-500 hover:text-gray-700 move-up-btn">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-900 ml-3 edit-btn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-900 ml-2 delete-btn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="draggable service-item flex items-center p-3 border rounded-lg" data-id="6">
+                            <div class="service-icon">
+                                <i class="fas fa-bus text-lg"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="font-medium">Public Transport</div>
+                                <div class="text-sm text-gray-500">Bus and train schedules</div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="relative inline-flex items-center cursor-pointer mr-4">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                                <button class="text-gray-500 hover:text-gray-700 move-up-btn">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-900 ml-3 edit-btn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-900 ml-2 delete-btn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Service Detail Modal -->
+    <div id="service-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+            <div class="border-b p-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-semibold">Add New Service</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="service-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Service Icon</label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-md">
+                                <div class="space-y-1 text-center">
+                                    <div class="flex text-sm text-gray-600 justify-center">
+                                        <label for="service-icon" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                            <span>Upload an icon</span>
+                                            <input id="service-icon" name="service-icon" type="file" class="sr-only">
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">SVG, PNG, JPG up to 2MB</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Service Title</label>
+                            <input type="text" id="service-title" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter service title">
+                        </div>
+                        
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea id="service-description" rows="2" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter service description"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tracking ID</label>
+                            <input type="text" id="tracking-id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter tracking ID">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Hidden</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="service-hidden" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Action Configuration</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Target</label>
+                                <select id="action-target" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="screen">Screen</option>
+                                    <option value="webview">Web View</option>
+                                    <option value="external">External Link</option>
+                                    <option value="deeplink">Deep Link</option>
+                                    <option value="store">App Store</option>
+                                </select>
+                            </div>
+                            
+                            <div id="screen-name-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Screen Name</label>
+                                <input type="text" id="screen-name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter screen name">
+                            </div>
+                            
+                            <div id="resource-id-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Resource ID</label>
+                                <input type="text" id="resource-id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter resource ID">
+                            </div>
+                            
+                            <div id="url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                                <input type="url" id="url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter URL">
+                            </div>
+                            
+                            <div id="fallback-url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fallback URL</label>
+                                <input type="url" id="fallback-url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter fallback URL">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Service</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('sidebar-open');
+            sidebar.classList.toggle('sidebar-closed');
+        });
+        
+        // Navigation links
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                navLinks.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Navigate to the page
+                window.location.href = this.getAttribute('href');
+            });
+        });
+        
+        // Show modal when adding new service
+        document.getElementById('add-service-btn').addEventListener('click', function() {
+            document.getElementById('modal-title').textContent = 'Add New Service';
+            document.getElementById('service-form').reset();
+            document.getElementById('service-modal').classList.remove('hidden');
+        });
+        
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', function() {
+            document.getElementById('service-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-btn').addEventListener('click', function() {
+            document.getElementById('service-modal').classList.add('hidden');
+        });
+        
+        // Handle action target change
+        document.getElementById('action-target').addEventListener('change', function() {
+            const target = this.value;
+            
+            // Hide all conditional fields
+            document.getElementById('screen-name-field').classList.add('hidden');
+            document.getElementById('resource-id-field').classList.add('hidden');
+            document.getElementById('url-field').classList.add('hidden');
+            document.getElementById('fallback-url-field').classList.add('hidden');
+            
+            // Show relevant fields based on target
+            if (target === 'screen') {
+                document.getElementById('screen-name-field').classList.remove('hidden');
+                document.getElementById('resource-id-field').classList.remove('hidden');
+            } else if (target === 'webview' || target === 'external') {
+                document.getElementById('url-field').classList.remove('hidden');
+                document.getElementById('fallback-url-field').classList.remove('hidden');
+            } else if (target === 'deeplink' || target === 'store') {
+                document.getElementById('url-field').classList.remove('hidden');
+            }
+        });
+        
+        // Initialize drag and drop for service items
+        let draggedItem = null;
+        const serviceItems = document.querySelectorAll('.draggable');
+        
+        serviceItems.forEach(item => {
+            item.setAttribute('draggable', true);
+            
+            item.addEventListener('dragstart', function() {
+                draggedItem = this;
+                setTimeout(() => this.classList.add('opacity-40'), 0);
+            });
+            
+            item.addEventListener('dragend', function() {
+                this.classList.remove('opacity-40');
+            });
+            
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            item.addEventListener('dragenter', function(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+            
+            item.addEventListener('dragleave', function() {
+                this.classList.remove('drag-over');
+            });
+            
+            item.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                if (draggedItem !== this) {
+                    // Find parent container
+                    const container = this.parentNode;
+                    
+                    // Determine positions
+                    const allItems = Array.from(container.children);
+                    const draggedIndex = allItems.indexOf(draggedItem);
+                    const targetIndex = allItems.indexOf(this);
+                    
+                    // Reorder in DOM
+                    if (draggedIndex < targetIndex) {
+                        container.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        container.insertBefore(draggedItem, this);
+                    }
+                }
+            });
+        });
+        
+        // Move up/down buttons
+        document.querySelectorAll('.move-up-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.closest('.service-item');
+                const prevItem = item.previousElementSibling;
+                
+                if (prevItem && prevItem.classList.contains('service-item')) {
+                    item.parentNode.insertBefore(item, prevItem);
+                }
+            });
+        });
+        
+        document.querySelectorAll('.move-down-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.closest('.service-item');
+                const nextItem = item.nextElementSibling;
+                
+                if (nextItem && nextItem.classList.contains('service-item')) {
+                    item.parentNode.insertBefore(nextItem, item);
+                }
+            });
+        });
+        
+        // Toggle service visibility
+        document.querySelectorAll('.draggable input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const serviceName = this.closest('.service-item').querySelector('.font-medium').textContent;
+                const status = this.checked ? 'shown' : 'hidden';
+                alert(`Service "${serviceName}" is now ${status}`);
+            });
+        });
+        
+        // Edit button functionality
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.closest('.service-item');
+                const serviceName = item.querySelector('.font-medium').textContent;
+                
+                // Populate form with item data
+                document.getElementById('service-title').value = serviceName;
+                document.getElementById('modal-title').textContent = 'Edit Service';
+                
+                // Show modal
+                document.getElementById('service-modal').classList.remove('hidden');
+            });
+        });
+        
+        // Form submission
+        document.getElementById('service-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const serviceTitle = document.getElementById('service-title').value;
+            alert(`Service "${serviceTitle}" has been saved successfully!`);
+            
+            // Close modal
+            document.getElementById('service-modal').classList.add('hidden');
+        });
+        
+        // Delete button functionality
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.closest('.service-item');
+                const serviceName = item.querySelector('.font-medium').textContent;
+                
+                if(confirm(`Are you sure you want to delete service "${serviceName}"?`)) {
+                    item.remove();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

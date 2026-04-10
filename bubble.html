@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating Bubble Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(-100%); }
+        .preview-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+            border: 2px solid #cbd5e1;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .floating-bubble {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .floating-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+        .floating-bubble.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        .bubble-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .bubble-tooltip {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .bubble-with-tooltip:hover .bubble-tooltip {
+            opacity: 1;
+        }
+        .status-active { background-color: #dcfce7; color: #166534; }
+        .status-scheduled { background-color: #fffbeb; color: #854d0e; }
+        .status-expired { background-color: #fee2e2; color: #b91c1c; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+    <!-- Mobile sidebar toggle -->
+    <div class="md:hidden fixed top-4 left-4 z-30">
+        <button id="mobile-menu-button" class="p-2 rounded-md text-white bg-blue-600">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-blue-800 text-white fixed h-full z-20 transition-transform duration-300">
+        <div class="p-5 flex items-center border-b border-blue-700">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <i class="fas fa-taxi text-xl"></i>
+            </div>
+            <h1 class="text-xl font-bold ml-3">Home Screen Admin</h1>
+        </div>
+        
+        <nav class="p-3">
+            <ul class="space-y-1">
+                <li>
+                    <a href="index.html" class="dashboard-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="sections.html" class="sections-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-th-large mr-3"></i> Home Sections
+                    </a>
+                </li>
+                <li>
+                    <a href="banners.html" class="banners-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-image mr-3"></i> Banner Management
+                    </a>
+                </li>
+                <li>
+                    <a href="services.html" class="services-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-concierge-bell mr-3"></i> Services Management
+                    </a>
+                </li>
+                <li>
+                    <a href="content.html" class="content-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-newspaper mr-3"></i> Content Management
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="bubble-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white">
+                        <i class="fas fa-circle mr-3"></i> Floating Bubble
+                    </a>
+                </li>
+                <li>
+                    <a href="config.html" class="config-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-cog mr-3"></i> App Config
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="absolute bottom-0 w-full p-4 border-t border-blue-700">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="font-medium">Admin User</p>
+                    <p class="text-sm text-blue-300">admin@rideapp.com</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 ml-64 overflow-auto">
+        <!-- Top bar -->
+        <header class="bg-white shadow-sm">
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">Floating Bubble Management</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <select class="bg-gray-100 rounded-lg py-2 px-3 appearance-none pr-8">
+                            <option>Vietnamese (vi)</option>
+                            <option>English (en)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Bubble content -->
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Manage Floating Bubbles</h3>
+                    <p class="text-gray-600 text-sm">Control floating action buttons on the home screen</p>
+                </div>
+                <button id="add-bubble-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add New Bubble
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Preview Panel -->
+                <div class="lg:col-span-1 bg-white rounded-xl shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Preview</h3>
+                    <div class="flex justify-center">
+                        <div class="preview-container">
+                            <!-- Simulated app screen content -->
+                            <div class="absolute top-16 left-4 right-4">
+                                <div class="h-10 bg-blue-200 rounded-lg mb-3"></div>
+                                <div class="h-24 bg-blue-100 rounded-lg mb-3"></div>
+                                <div class="grid grid-cols-3 gap-3 mb-3">
+                                    <div class="h-16 bg-green-100 rounded-lg"></div>
+                                    <div class="h-16 bg-green-100 rounded-lg"></div>
+                                    <div class="h-16 bg-green-100 rounded-lg"></div>
+                                </div>
+                                <div class="h-32 bg-yellow-50 rounded-lg"></div>
+                            </div>
+                            
+                            <!-- Floating Bubble -->
+                            <div id="preview-bubble" class="bubble-with-tooltip floating-bubble active">
+                                <i class="fas fa-star text-xl"></i>
+                                <div class="bubble-badge">3</div>
+                                <div class="bubble-tooltip">Special Offer!</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Current Settings</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Icon:</span>
+                                <span class="font-medium"><i class="fas fa-star mr-1"></i> Star</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Badge Text:</span>
+                                <span class="font-medium">3</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Tooltip:</span>
+                                <span class="font-medium">Special Offer!</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Priority:</span>
+                                <span class="font-medium">High</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bubbles Table -->
+                <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Badge Text</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tooltip</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                <i class="fas fa-star text-blue-600"></i>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Special Offer!</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">High</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 1, 2023 09:00 AM</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 30, 2023 11:59 PM</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                                <i class="fas fa-gift text-yellow-600"></i>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">New</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Limited Time Offer</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Medium</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 10, 2023 10:00 AM</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 20, 2023 11:59 PM</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-scheduled px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Scheduled</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                                <i class="fas fa-headset text-green-600"></i>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Customer Support</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Low</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 1, 2023 08:00 AM</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 30, 2023 11:59 PM</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-expired px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Expired</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bubble Detail Modal -->
+    <div id="bubble-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+            <div class="border-b p-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-semibold">Add New Bubble</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="bubble-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                            <select id="bubble-icon" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="star">Star</option>
+                                <option value="gift">Gift</option>
+                                <option value="headset">Headset</option>
+                                <option value="bell">Bell</option>
+                                <option value="bolt">Bolt</option>
+                                <option value="rocket">Rocket</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Badge Text (Optional)</label>
+                            <input type="text" id="badge-text" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter badge text (e.g. 3, New)">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tooltip Text</label>
+                            <input type="text" id="tooltip-text" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter tooltip text">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select id="priority" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                            <input type="datetime-local" id="start-time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                            <input type="datetime-local" id="end-time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Visible</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="bubble-visible" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Action Configuration</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Target</label>
+                                <select id="action-target" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="screen">Screen</option>
+                                    <option value="webview">Web View</option>
+                                    <option value="external">External Link</option>
+                                    <option value="deeplink">Deep Link</option>
+                                    <option value="store">App Store</option>
+                                </select>
+                            </div>
+                            
+                            <div id="screen-name-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Screen Name</label>
+                                <input type="text" id="screen-name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter screen name">
+                            </div>
+                            
+                            <div id="resource-id-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Resource ID</label>
+                                <input type="text" id="resource-id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter resource ID">
+                            </div>
+                            
+                            <div id="url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                                <input type="url" id="url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter URL">
+                            </div>
+                            
+                            <div id="fallback-url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fallback URL</label>
+                                <input type="url" id="fallback-url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter fallback URL">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Bubble</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('sidebar-open');
+            sidebar.classList.toggle('sidebar-closed');
+        });
+        
+        // Navigation links
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                navLinks.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Navigate to the page
+                window.location.href = this.getAttribute('href');
+            });
+        });
+        
+        // Show modal when adding new bubble
+        document.getElementById('add-bubble-btn').addEventListener('click', function() {
+            document.getElementById('modal-title').textContent = 'Add New Bubble';
+            document.getElementById('bubble-form').reset();
+            document.getElementById('bubble-modal').classList.remove('hidden');
+        });
+        
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', function() {
+            document.getElementById('bubble-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-btn').addEventListener('click', function() {
+            document.getElementById('bubble-modal').classList.add('hidden');
+        });
+        
+        // Handle action target change
+        document.getElementById('action-target').addEventListener('change', function() {
+            const target = this.value;
+            
+            // Hide all conditional fields
+            document.getElementById('screen-name-field').classList.add('hidden');
+            document.getElementById('resource-id-field').classList.add('hidden');
+            document.getElementById('url-field').classList.add('hidden');
+            document.getElementById('fallback-url-field').classList.add('hidden');
+            
+            // Show relevant fields based on target
+            if (target === 'screen') {
+                document.getElementById('screen-name-field').classList.remove('hidden');
+                document.getElementById('resource-id-field').classList.remove('hidden');
+            } else if (target === 'webview' || target === 'external') {
+                document.getElementById('url-field').classList.remove('hidden');
+                document.getElementById('fallback-url-field').classList.remove('hidden');
+            } else if (target === 'deeplink' || target === 'store') {
+                document.getElementById('url-field').classList.remove('hidden');
+            }
+        });
+        
+        // Update preview when icon changes
+        document.getElementById('bubble-icon').addEventListener('change', function() {
+            const iconClassMap = {
+                'star': 'fa-star',
+                'gift': 'fa-gift',
+                'headset': 'fa-headset',
+                'bell': 'fa-bell',
+                'bolt': 'fa-bolt',
+                'rocket': 'fa-rocket'
+            };
+            
+            const iconClass = iconClassMap[this.value];
+            const previewBubble = document.getElementById('preview-bubble');
+            previewBubble.innerHTML = `<i class="fas ${iconClass} text-xl"></i>`;
+            
+            // Keep the badge if it exists
+            const badge = document.createElement('div');
+            badge.className = 'bubble-badge';
+            badge.textContent = '3'; // Default value
+            previewBubble.appendChild(badge);
+            
+            // Add tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'bubble-tooltip';
+            tooltip.textContent = 'Special Offer!';
+            previewBubble.appendChild(tooltip);
+        });
+        
+        // Update preview when badge text changes
+        document.getElementById('badge-text').addEventListener('input', function() {
+            const badges = document.querySelectorAll('.bubble-badge');
+            badges.forEach(badge => {
+                badge.textContent = this.value || '';
+            });
+        });
+        
+        // Update preview when tooltip text changes
+        document.getElementById('tooltip-text').addEventListener('input', function() {
+            const tooltips = document.querySelectorAll('.bubble-tooltip');
+            tooltips.forEach(tooltip => {
+                tooltip.textContent = this.value || 'Special Offer!';
+            });
+        });
+        
+        // Form submission
+        document.getElementById('bubble-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const tooltipText = document.getElementById('tooltip-text').value;
+            alert(`Floating bubble "${tooltipText}" has been saved successfully!`);
+            
+            // Close modal
+            document.getElementById('bubble-modal').classList.add('hidden');
+        });
+        
+        // Edit button functionality
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const tooltipText = row.children[2].textContent;
+                
+                // Populate form with row data
+                document.getElementById('tooltip-text').value = tooltipText;
+                document.getElementById('badge-text').value = row.children[1].textContent;
+                
+                // Set priority
+                const priority = row.children[3].textContent;
+                document.getElementById('priority').value = priority.toLowerCase();
+                
+                // Set date values
+                const startDate = new Date(row.children[4].textContent);
+                const endDate = new Date(row.children[5].textContent);
+                
+                // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
+                document.getElementById('start-time').value = startDate.toISOString().slice(0, 16);
+                document.getElementById('end-time').value = endDate.toISOString().slice(0, 16);
+                
+                // Set modal title
+                document.getElementById('modal-title').textContent = 'Edit Bubble';
+                
+                // Show modal
+                document.getElementById('bubble-modal').classList.remove('hidden');
+            });
+        });
+        
+        // Delete button functionality
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const tooltipText = row.children[2].textContent;
+                
+                if(confirm(`Are you sure you want to delete bubble "${tooltipText}"?`)) {
+                    row.remove();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(-100%); }
+        .status-active { background-color: #dcfce7; color: #166534; }
+        .status-scheduled { background-color: #fffbeb; color: #854d0e; }
+        .status-expired { background-color: #fee2e2; color: #b91c1c; }
+        .content-type-promo { background-color: #fef3c7; color: #92400e; }
+        .content-type-vip { background-color: #ddd6fe; color: #5b21b6; }
+        .content-type-entertainment { background-color: #dbeafe; color: #1e40af; }
+        .thumbnail-img {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+    <!-- Mobile sidebar toggle -->
+    <div class="md:hidden fixed top-4 left-4 z-30">
+        <button id="mobile-menu-button" class="p-2 rounded-md text-white bg-blue-600">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-blue-800 text-white fixed h-full z-20 transition-transform duration-300">
+        <div class="p-5 flex items-center border-b border-blue-700">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <i class="fas fa-taxi text-xl"></i>
+            </div>
+            <h1 class="text-xl font-bold ml-3">Home Screen Admin</h1>
+        </div>
+        
+        <nav class="p-3">
+            <ul class="space-y-1">
+                <li>
+                    <a href="index.html" class="dashboard-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="sections.html" class="sections-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-th-large mr-3"></i> Home Sections
+                    </a>
+                </li>
+                <li>
+                    <a href="banners.html" class="banners-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-image mr-3"></i> Banner Management
+                    </a>
+                </li>
+                <li>
+                    <a href="services.html" class="services-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-concierge-bell mr-3"></i> Services Management
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="content-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white">
+                        <i class="fas fa-newspaper mr-3"></i> Content Management
+                    </a>
+                </li>
+                <li>
+                    <a href="bubble.html" class="bubble-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-circle mr-3"></i> Floating Bubble
+                    </a>
+                </li>
+                <li>
+                    <a href="config.html" class="config-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100">
+                        <i class="fas fa-cog mr-3"></i> App Config
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="absolute bottom-0 w-full p-4 border-t border-blue-700">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="font-medium">Admin User</p>
+                    <p class="text-sm text-blue-300">admin@rideapp.com</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 ml-64 overflow-auto">
+        <!-- Top bar -->
+        <header class="bg-white shadow-sm">
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">Content Management</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <select class="bg-gray-100 rounded-lg py-2 px-3 appearance-none pr-8">
+                            <option>Vietnamese (vi)</option>
+                            <option>English (en)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content management content -->
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Manage Content</h3>
+                    <p class="text-gray-600 text-sm">Control promotional, VIP, and entertainment content</p>
+                </div>
+                <button id="add-content-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add New Content
+                </button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="bg-white rounded-xl shadow p-5 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option>All Categories</option>
+                            <option>Promotional</option>
+                            <option>VIP Exclusive</option>
+                            <option>Entertainment</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Content Type</label>
+                        <select class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option>All Types</option>
+                            <option>Article</option>
+                            <option>External Link</option>
+                            <option>Deeplink</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option>All Status</option>
+                            <option>Active</option>
+                            <option>Scheduled</option>
+                            <option>Expired</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content table -->
+            <div class="bg-white rounded-xl shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thumbnail</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Publish Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expire Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x60/e5e7eb/374151?text=Promo" alt="Content Thumbnail" class="thumbnail-img">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">Summer Sale Campaign</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="content-type-promo px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Promotional</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Article</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 15, 2023 10:00 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 30, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x60/dbeafe/3b82f6?text=VIP" alt="Content Thumbnail" class="thumbnail-img">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">Exclusive VIP Benefits</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="content-type-vip px-2 inline-flex text-xs leading-5 font-semibold rounded-full">VIP Exclusive</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">External Link</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 1, 2023 09:00 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dec 31, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x60/fed7aa/f59e0b?text=Ent" alt="Content Thumbnail" class="thumbnail-img">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">Weekend Entertainment Guide</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="content-type-entertainment px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Entertainment</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Article</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 10, 2023 12:00 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jun 17, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-scheduled px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Scheduled</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <img src="https://placehold.co/80x60/ecfdf5/10b981?text=News" alt="Content Thumbnail" class="thumbnail-img">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">New App Features</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="content-type-promo px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Promotional</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Deeplink</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 1, 2023 08:00 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">May 30, 2023 11:59 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-expired px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Expired</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of{' '}
+                                <span class="font-medium">4</span> results
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Previous</span>
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                                <a href="#" aria-current="page" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                    1
+                                </a>
+                                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    2
+                                </a>
+                                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    3
+                                </a>
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Next</span>
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Content Detail Modal -->
+    <div id="content-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+            <div class="border-b p-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-semibold">Add New Content</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="content-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                            <input type="text" id="content-title" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter content title">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select id="content-category" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="promo">Promotional</option>
+                                <option value="vip">VIP Exclusive</option>
+                                <option value="entertainment">Entertainment</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Content Type</label>
+                            <select id="content-type" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="article">Article</option>
+                                <option value="external">External Link</option>
+                                <option value="deeplink">Deeplink</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Thumbnail Upload</label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-gray-300 rounded-md">
+                                <div class="space-y-1 text-center">
+                                    <div class="flex text-sm text-gray-600 justify-center">
+                                        <label for="content-thumbnail" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                                            <span>Upload an image</span>
+                                            <input id="content-thumbnail" name="content-thumbnail" type="file" class="sr-only">
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea id="content-description" rows="3" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter content description"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Publish Time</label>
+                            <input type="datetime-local" id="publish-time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Expire Time</label>
+                            <input type="datetime-local" id="expire-time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Action Configuration</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Target</label>
+                                <select id="action-target" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="screen">Screen</option>
+                                    <option value="webview">Web View</option>
+                                    <option value="external">External Link</option>
+                                    <option value="deeplink">Deep Link</option>
+                                    <option value="store">App Store</option>
+                                </select>
+                            </div>
+                            
+                            <div id="screen-name-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Screen Name</label>
+                                <input type="text" id="screen-name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter screen name">
+                            </div>
+                            
+                            <div id="resource-id-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Resource ID</label>
+                                <input type="text" id="resource-id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter resource ID">
+                            </div>
+                            
+                            <div id="url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                                <input type="url" id="url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter URL">
+                            </div>
+                            
+                            <div id="fallback-url-field" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fallback URL</label>
+                                <input type="url" id="fallback-url" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter fallback URL">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Content</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('sidebar-open');
+            sidebar.classList.toggle('sidebar-closed');
+        });
+        
+        // Navigation links
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                navLinks.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Navigate to the page
+                window.location.href = this.getAttribute('href');
+            });
+        });
+        
+        // Show modal when adding new content
+        document.getElementById('add-content-btn').addEventListener('click', function() {
+            document.getElementById('modal-title').textContent = 'Add New Content';
+            document.getElementById('content-form').reset();
+            document.getElementById('content-modal').classList.remove('hidden');
+        });
+        
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', function() {
+            document.getElementById('content-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-btn').addEventListener('click', function() {
+            document.getElementById('content-modal').classList.add('hidden');
+        });
+        
+        // Handle action target change
+        document.getElementById('action-target').addEventListener('change', function() {
+            const target = this.value;
+            
+            // Hide all conditional fields
+            document.getElementById('screen-name-field').classList.add('hidden');
+            document.getElementById('resource-id-field').classList.add('hidden');
+            document.getElementById('url-field').classList.add('hidden');
+            document.getElementById('fallback-url-field').classList.add('hidden');
+            
+            // Show relevant fields based on target
+            if (target === 'screen') {
+                document.getElementById('screen-name-field').classList.remove('hidden');
+                document.getElementById('resource-id-field').classList.remove('hidden');
+            } else if (target === 'webview' || target === 'external') {
+                document.getElementById('url-field').classList.remove('hidden');
+                document.getElementById('fallback-url-field').classList.remove('hidden');
+            } else if (target === 'deeplink' || target === 'store') {
+                document.getElementById('url-field').classList.remove('hidden');
+            }
+        });
+        
+        // Form submission
+        document.getElementById('content-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const contentTitle = document.getElementById('content-title').value;
+            alert(`Content "${contentTitle}" has been saved successfully!`);
+            
+            // Close modal
+            document.getElementById('content-modal').classList.add('hidden');
+        });
+        
+        // Edit button functionality
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const contentTitle = row.children[1].textContent;
+                
+                // Populate form with row data
+                document.getElementById('content-title').value = contentTitle;
+                
+                // Set category based on badge text
+                const categoryText = row.children[2].firstElementChild.textContent.toLowerCase();
+                document.getElementById('content-category').value = categoryText.replace(/\s/g, '');
+                
+                // Set content type
+                const contentType = row.children[3].textContent.toLowerCase();
+                document.getElementById('content-type').value = contentType;
+                
+                // Set date values
+                const publishDate = new Date(row.children[4].textContent);
+                const expireDate = new Date(row.children[5].textContent);
+                
+                // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
+                document.getElementById('publish-time').value = publishDate.toISOString().slice(0, 16);
+                document.getElementById('expire-time').value = expireDate.toISOString().slice(0, 16);
+                
+                // Set modal title
+                document.getElementById('modal-title').textContent = 'Edit Content';
+                
+                // Show modal
+                document.getElementById('content-modal').classList.remove('hidden');
+            });
+        });
+        
+        // Delete button functionality
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const contentTitle = row.children[1].textContent;
+                
+                if(confirm(`Are you sure you want to delete content "${contentTitle}"?`)) {
+                    row.remove();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

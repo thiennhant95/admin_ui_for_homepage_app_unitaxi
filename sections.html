@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Sections Management | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .draggable { transition: transform 0.2s; }
+        .drag-over { border: 2px dashed #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .status-active { background-color: #dcfce7; color: #166534; }
+        .status-scheduled { background-color: #fffbeb; color: #854d0e; }
+        .status-expired { background-color: #fee2e2; color: #b91c1c; }
+        .section-type-banner { background-color: #dbeafe; color: #1e40af; }
+        .section-type-service { background-color: #dcfce7; color: #166534; }
+        .section-type-promotion { background-color: #fef3c7; color: #92400e; }
+        .section-type-vip { background-color: #ddd6fe; color: #5b21b6; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+    <!-- Mobile sidebar toggle -->
+    <div class="md:hidden fixed top-4 left-4 z-30">
+        <button id="mobile-menu-button" class="p-2 rounded-md text-white bg-blue-600">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-blue-800 text-white fixed h-full z-20 transition-transform duration-300">
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 ml-64 overflow-auto">
+        <!-- Top bar -->
+        <header class="bg-white shadow-sm">
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">Home Sections Management</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <select class="bg-gray-100 rounded-lg py-2 px-3 appearance-none pr-8">
+                            <option>Vietnamese (vi)</option>
+                            <option>English (en)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <button class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sections content -->
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800">Manage Home Screen Sections</h3>
+                    <p class="text-gray-600 text-sm">Control what appears on the mobile home screen</p>
+                </div>
+                <button id="add-section-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add New Section
+                </button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="bg-white rounded-xl shadow p-5 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">User Group</label>
+                        <select class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option>All</option>
+                            <option>VIP</option>
+                            <option>Normal</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                        <select class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option>All</option>
+                            <option>HCM City</option>
+                            <option>Hanoi</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Section Type</label>
+                        <select class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option>All Types</option>
+                            <option>Banner</option>
+                            <option>Service</option>
+                            <option>Promotion</option>
+                            <option>VIP</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option>All Status</option>
+                            <option>Active</option>
+                            <option>Scheduled</option>
+                            <option>Expired</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sections table -->
+            <div class="bg-white rounded-xl shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table id="sections-table" class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Group</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visible</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200 draggable-container">
+                            <tr class="draggable" data-id="1">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">Promotional Banner</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="section-type-banner px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Banner</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">ALL</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">ALL</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                    </label>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <button class="text-gray-500 hover:text-gray-700 mr-2 move-up-btn">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <span class="mx-1">1</span>
+                                        <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr class="draggable" data-id="2">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">Popular Services</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="section-type-service px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Service</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">ALL</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">ALL</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                    </label>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <button class="text-gray-500 hover:text-gray-700 mr-2 move-up-btn">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <span class="mx-1">2</span>
+                                        <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr class="draggable" data-id="3">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">Special Offers</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="section-type-promotion px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Promotion</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">NORMAL</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">HCM</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                    </label>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <button class="text-gray-500 hover:text-gray-700 mr-2 move-up-btn">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <span class="mx-1">3</span>
+                                        <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-scheduled px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Scheduled</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr class="draggable" data-id="4">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">VIP Exclusive</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="section-type-vip px-2 inline-flex text-xs leading-5 font-semibold rounded-full">VIP</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">VIP</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">ALL</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                    </label>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <button class="text-gray-500 hover:text-gray-700 mr-2 move-up-btn">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <span class="mx-1">4</span>
+                                        <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-active px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Active</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            
+                            <tr class="draggable" data-id="5">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">News & Updates</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="section-type-banner px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Banner</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">ALL</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">HN</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                    </label>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <button class="text-gray-500 hover:text-gray-700 mr-2 move-up-btn">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <span class="mx-1">5</span>
+                                        <button class="text-gray-500 hover:text-gray-700 ml-2 move-down-btn">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-expired px-2 inline-flex text-xs leading-5 font-semibold rounded-full">Expired</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn"><i class="fas fa-edit"></i></button>
+                                    <button class="text-red-600 hover:text-red-900 delete-btn"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Section Detail Modal -->
+    <div id="section-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-center bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4">
+            <div class="border-b p-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-semibold">Edit Section</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="section-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Section Name</label>
+                            <input type="text" id="section-name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter section name">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Section Type</label>
+                            <select id="section-type" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="banner">Banner</option>
+                                <option value="service">Service</option>
+                                <option value="promotion">Promotion</option>
+                                <option value="vip">VIP</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">User Group</label>
+                            <select id="user-group" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="all">ALL</option>
+                                <option value="vip">VIP</option>
+                                <option value="normal">NORMAL</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <select id="location" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="all">ALL</option>
+                                <option value="hcm">HCM City</option>
+                                <option value="hn">Hanoi</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Visible</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="section-visible" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Order Position</label>
+                            <input type="number" id="section-order" min="1" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Position in home screen">
+                        </div>
+                    </div>
+                    
+                    <!-- Specific configuration based on section type -->
+                    <div id="specific-config" class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Configuration</h4>
+                        
+                        <!-- Banner config -->
+                        <div id="banner-config" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Autoplay</label>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="banner-autoplay" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Interval (seconds)</label>
+                                    <input type="number" id="banner-interval" min="1" value="5" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Service config -->
+                        <div id="service-config" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Columns Layout</label>
+                                    <select id="service-columns" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="2">2 Columns</option>
+                                        <option value="3" selected>3 Columns</option>
+                                        <option value="4">4 Columns</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Personalization</label>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="service-personalization" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Promotion config -->
+                        <div id="promotion-config" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Layout Style</label>
+                                    <select id="promotion-layout" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="grid">Grid</option>
+                                        <option value="horizontal">Horizontal</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Max Items</label>
+                                    <input type="number" id="promotion-max-items" min="1" value="6" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- VIP config -->
+                        <div id="vip-config" class="hidden">
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">VIP Level Required</label>
+                                    <select id="vip-level" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="silver">Silver</option>
+                                        <option value="gold" selected>Gold</option>
+                                        <option value="platinum">Platinum</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        // Khởi tạo sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSidebar('sections');
+        });
+        
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            // Toggle class để chuyển đổi ẩn/hiện sidebar trên mobile
+            sidebar.classList.toggle('-translate-x-full');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.style.display = 'none';
+            } else {
+                sidebar.style.display = 'block';
+            }
+        });
+        
+        // Navigation links
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                navLinks.forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Navigate to the page
+                window.location.href = this.getAttribute('href');
+            });
+        });
+        
+        // Show modal when adding new section
+        document.getElementById('add-section-btn').addEventListener('click', function() {
+            document.getElementById('modal-title').textContent = 'Add New Section';
+            document.getElementById('section-form').reset();
+            showModal('section-modal');
+        });
+        
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', function() {
+            hideModal('section-modal');
+        });
+        
+        document.getElementById('cancel-btn').addEventListener('click', function() {
+            hideModal('section-modal');
+        });
+        
+        // Handle section type change in modal
+        document.getElementById('section-type').addEventListener('change', function() {
+            // Hide all config divs
+            document.getElementById('banner-config').classList.add('hidden');
+            document.getElementById('service-config').classList.add('hidden');
+            document.getElementById('promotion-config').classList.add('hidden');
+            document.getElementById('vip-config').classList.add('hidden');
+            
+            // Show config based on selection
+            const configId = this.value + '-config';
+            document.getElementById(configId).classList.remove('hidden');
+        });
+        
+        // Initialize drag and drop for table rows
+        let draggedItem = null;
+        const rows = document.querySelectorAll('.draggable');
+        
+        rows.forEach(row => {
+            row.setAttribute('draggable', true);
+            
+            row.addEventListener('dragstart', function() {
+                draggedItem = this;
+                setTimeout(() => this.classList.add('opacity-40'), 0);
+            });
+            
+            row.addEventListener('dragend', function() {
+                this.classList.remove('opacity-40');
+            });
+            
+            row.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            row.addEventListener('dragenter', function(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+            
+            row.addEventListener('dragleave', function() {
+                this.classList.remove('drag-over');
+            });
+            
+            row.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                if (draggedItem !== this) {
+                    // Get all rows in tbody
+                    const container = document.querySelector('.draggable-container');
+                    const allRows = Array.from(container.children);
+                    
+                    // Find index of dragged and target items
+                    const draggedIndex = allRows.indexOf(draggedItem);
+                    const targetIndex = allRows.indexOf(this);
+                    
+                    // Reorder the DOM elements
+                    if (draggedIndex < targetIndex) {
+                        container.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        container.insertBefore(draggedItem, this);
+                    }
+                    
+                    // Update order numbers
+                    updateOrderNumbers();
+                }
+            });
+        });
+        
+        // Move up/down buttons
+        document.querySelectorAll('.move-up-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const prevRow = row.previousElementSibling;
+                
+                if (prevRow) {
+                    row.parentNode.insertBefore(row, prevRow);
+                    updateOrderNumbers();
+                }
+            });
+        });
+        
+        document.querySelectorAll('.move-down-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const nextRow = row.nextElementSibling;
+                
+                if (nextRow) {
+                    row.parentNode.insertBefore(nextRow, row);
+                    updateOrderNumbers();
+                }
+            });
+        });
+        
+        // Update order numbers in table
+        function updateOrderNumbers() {
+            const rows = document.querySelectorAll('.draggable');
+            rows.forEach((row, index) => {
+                const orderCell = row.cells[5]; // Order column is the 6th column (0-indexed)
+                const orderSpan = orderCell.querySelector('span');
+                orderSpan.textContent = index + 1;
+            });
+        }
+        
+        // Toggle visibility
+        document.querySelectorAll('.draggable input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const sectionName = this.closest('tr').children[0].textContent;
+                const status = this.checked ? 'enabled' : 'disabled';
+                alert(`Section "${sectionName}" has been ${status}`);
+            });
+        });
+        
+        // Edit button functionality
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const sectionName = row.children[0].textContent;
+                
+                // Populate form with row data
+                document.getElementById('section-name').value = sectionName;
+                document.getElementById('modal-title').textContent = 'Edit Section';
+                
+                // Get section type from badge
+                const sectionType = row.children[1].firstElementChild.textContent.toLowerCase();
+                document.getElementById('section-type').value = sectionType;
+                
+                // Trigger change event to show appropriate config
+                document.getElementById('section-type').dispatchEvent(new Event('change'));
+                
+                // Show modal
+                showModal('section-modal');
+            });
+        });
+        
+        // Form submission
+        document.getElementById('section-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const sectionName = document.getElementById('section-name').value;
+            alert(`Changes to section "${sectionName}" have been saved!`);
+            
+            // Close modal
+            hideModal('section-modal');
+        });
+        
+        // Delete button functionality
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const sectionName = row.children[0].textContent;
+                
+                if(confirm(`Are you sure you want to delete section "${sectionName}"?`)) {
+                    row.remove();
+                    updateOrderNumbers();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
