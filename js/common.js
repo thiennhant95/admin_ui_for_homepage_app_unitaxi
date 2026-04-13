@@ -16,33 +16,38 @@ function renderSidebar(currentPage) {
                     </a>
                 </li>
                 <li>
+                    <a href="builder.html" class="${currentPage === 'builder' ? 'builder-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white' : 'builder-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100'}">
+                        <i class="fas fa-paint-brush mr-3"></i> Home Screen Builder
+                    </a>
+                </li>
+                <li>
                     <a href="sections.html" class="${currentPage === 'sections' ? 'sections-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white' : 'sections-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100'}">
-                        <i class="fas fa-th-large mr-3"></i> Home Sections
+                        <i class="fas fa-th-large mr-3"></i> Home Sections (Legacy)
                     </a>
                 </li>
                 <li>
                     <a href="banners.html" class="${currentPage === 'banners' ? 'banners-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white' : 'banners-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100'}">
-                        <i class="fas fa-image mr-3"></i> Banner Management
+                        <i class="fas fa-image mr-3"></i> Banner Management (Legacy)
                     </a>
                 </li>
                 <li>
                     <a href="services.html" class="${currentPage === 'services' ? 'services-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white' : 'services-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100'}">
-                        <i class="fas fa-concierge-bell mr-3"></i> Services Management
+                        <i class="fas fa-concierge-bell mr-3"></i> Services Management (Legacy)
                     </a>
                 </li>
                 <li>
                     <a href="content.html" class="${currentPage === 'content' ? 'content-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white' : 'content-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100'}">
-                        <i class="fas fa-newspaper mr-3"></i> Content Management
+                        <i class="fas fa-newspaper mr-3"></i> Content Management (Legacy)
                     </a>
                 </li>
                 <li>
                     <a href="bubble.html" class="${currentPage === 'bubble' ? 'bubble-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white' : 'bubble-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100'}">
-                        <i class="fas fa-circle mr-3"></i> Floating Bubble
+                        <i class="fas fa-circle mr-3"></i> Floating Bubble (Legacy)
                     </a>
                 </li>
                 <li>
                     <a href="config.html" class="${currentPage === 'config' ? 'config-link active flex items-center px-4 py-3 bg-blue-700 rounded-lg text-white' : 'config-link flex items-center px-4 py-3 hover:bg-blue-700 rounded-lg text-blue-100'}">
-                        <i class="fas fa-cog mr-3"></i> App Config
+                        <i class="fas fa-cog mr-3"></i> App Config (Legacy)
                     </a>
                 </li>
             </ul>

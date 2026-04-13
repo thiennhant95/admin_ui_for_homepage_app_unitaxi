@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Screen Builder | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(-100%); }
+        
+        /* Drag and Drop Styles */
+        .draggable-item { 
+            transition: all 0.2s; 
+            cursor: grab;
+        }
+        .draggable-item:active { 
+            cursor: grabbing; 
+        }
+        .drag-over { 
+            border: 2px dashed #3b82f6; 
+            background-color: rgba(59, 130, 246, 0.1); 
+        }
+        .dragging { 
+            opacity: 0.5; 
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Status badges */
+        .status-active { background-color: #dcfce7; color: #166534; }
+        .status-scheduled { background-color: #fffbeb; color: #854d0e; }
+        .status-expired { background-color: #fee2e2; color: #b91c1c; }
+        .status-inactive { background-color: #f1f5f9; color: #475569; }
+        
+        /* Section type badges */
+        .section-type-banner { background-color: #dbeafe; color: #1e40af; }
+        .section-type-service { background-color: #dcfce7; color: #166534; }
+        .section-type-promotion { background-color: #fef3c7; color: #92400e; }
+        .section-type-content { background-color: #ddd6fe; color: #5b21b6; }
+        .section-type-vip { background-color: #fce7f3; color: #9d174d; }
+        
+        /* Mobile Preview */
+        .mobile-preview-container {
+            position: relative;
+            width: 320px;
+            height: 650px;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+            border: 3px solid #334155;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+        .mobile-preview-header {
+            height: 44px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .mobile-preview-content {
+            height: calc(100% - 44px);
+            overflow-y: auto;
+            padding: 12px;
+            background: #ffffff;
+        }
+        .mobile-preview-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .mobile-preview-content::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 2px;
+        }
+        
+        /* Editor Panel Animations */
+        .editor-panel {
+            transition: all 0.3s ease;
+        }
+        .editor-section {
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .editor-section.active {
+            border-left-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* Image Upload */
+        .image-upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .image-upload-area:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        /* Accordion */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .accordion-content.open {
+            max-height: 1000px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+    <!-- Mobile sidebar toggle -->
+    <div class="md:hidden fixed top-4 left-4 z-30">
+        <button id="mobile-menu-button" class="p-2 rounded-md text-white bg-blue-600 shadow-lg">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-blue-800 text-white fixed h-full z-20 transition-transform duration-300">
+        <!-- Populated by JS -->
+    </aside>
+
+    <!-- Main content area - Three Column Layout -->
+    <main class="flex-1 ml-64 flex overflow-hidden">
+        <!-- LEFT COLUMN - Control Panel (Sections List) -->
+        <div class="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-layer-group mr-2 text-blue-600"></i>
+                    Sections
+                </h2>
+                <p class="text-xs text-gray-500 mt-1">Drag to reorder • Click to edit</p>
+            </div>
+            
+            <!-- Add Section Button -->
+            <div class="p-4 border-b border-gray-200">
+                <button id="add-section-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center transition-colors">
+                    <i class="fas fa-plus mr-2"></i> Add Section
+                </button>
+            </div>
+            
+            <!-- Sections List (Draggable) -->
+            <div id="sections-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                <!-- Populated by JS -->
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="p-4 border-t border-gray-200 bg-gray-50">
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                        <span class="text-gray-600"><span id="active-count">0</span> Active</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
+                        <span class="text-gray-600"><span id="inactive-count">0</span> Hidden</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER COLUMN - Main Editor -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-gray-100">
+            <!-- Top Bar with Feature Toggles -->
+            <header class="bg-white shadow-sm border-b border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800">Home Screen Builder</h2>
+                        <p class="text-sm text-gray-500">Configure sections and preview in real-time</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button id="autosave-indicator" class="text-sm text-gray-500 flex items-center">
+                            <i class="fas fa-check-circle text-green-500 mr-1"></i> Saved
+                        </button>
+                        <button id="save-all-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                            <i class="fas fa-save mr-2"></i> Save All
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Feature Toggles Bar -->
+                <div class="flex items-center space-x-4 pt-3 border-t border-gray-100">
+                    <span class="text-sm font-medium text-gray-700">App Features:</span>
+                    
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="feature-vip" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                        <span class="text-sm text-gray-600">VIP Services</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="feature-search" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                        <span class="text-sm text-gray-600">Search</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="feature-bubble">
+                            <span class="toggle-slider"></span>
+                        </div>
+                        <span class="text-sm text-gray-600">Floating Bubble</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="feature-personalization" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                        <span class="text-sm text-gray-600">Personalization</span>
+                    </label>
+                </div>
+            </header>
+            
+            <!-- Editor Content Area -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- No Selection State -->
+                <div id="no-selection-state" class="flex flex-col items-center justify-center h-full text-gray-400">
+                    <i class="fas fa-mouse-pointer text-5xl mb-4"></i>
+                    <p class="text-lg font-medium">Select a section to edit</p>
+                    <p class="text-sm">Click on any section from the left panel</p>
+                </div>
+                
+                <!-- Editor Panel (shown when section selected) -->
+                <div id="editor-panel" class="editor-panel hidden">
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <!-- Editor Header -->
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 id="editor-title" class="text-lg font-semibold">Section Name</h3>
+                                    <p id="editor-subtitle" class="text-blue-200 text-sm">Section Type</p>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span id="editor-status" class="px-3 py-1 rounded-full text-xs font-medium bg-white/20">
+                                        Active
+                                    </span>
+                                    <button id="close-editor-btn" class="hover:bg-white/20 rounded-lg p-2 transition-colors">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Editor Body -->
+                        <div class="p-6">
+                            <!-- Basic Settings -->
+                            <div class="space-y-4 mb-6">
+                                <h4 class="font-medium text-gray-800 flex items-center">
+                                    <i class="fas fa-cog mr-2 text-gray-400"></i>
+                                    Basic Settings
+                                </h4>
+                                
+                                <!-- Section Name -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Section Name</label>
+                                    <input type="text" id="edit-section-name" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                                
+                                <!-- Visibility Toggle -->
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Visible on App</p>
+                                        <p class="text-sm text-gray-500">Toggle to show/hide this section</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="edit-section-visible" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <!-- User Group Targeting -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Target User Group</label>
+                                    <select id="edit-section-user-group" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="all">All Users</option>
+                                        <option value="vip">VIP Only</option>
+                                        <option value="normal">Normal Only</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Location Targeting -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                    <select id="edit-section-location" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="all">All Locations</option>
+                                        <option value="HN">Hanoi (HN)</option>
+                                        <option value="HCM">Ho Chi Minh City (HCM)</option>
+                                        <option value="DN">Da Nang (DN)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Dynamic Content Editor (changes based on section type) -->
+                            <div id="dynamic-editor" class="border-t border-gray-200 pt-6">
+                                <!-- Populated dynamically based on section type -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN - Live Preview -->
+        <div class="w-96 bg-gray-800 flex flex-col overflow-hidden">
+            <!-- Preview Header -->
+            <div class="p-4 border-b border-gray-700 bg-gray-900">
+                <h2 class="text-lg font-semibold text-white flex items-center">
+                    <i class="fas fa-mobile-alt mr-2 text-blue-400"></i>
+                    Live Preview
+                </h2>
+            </div>
+            
+            <!-- Preview Controls -->
+            <div class="p-4 border-b border-gray-700 bg-gray-800">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">User Group</label>
+                        <select id="preview-user-group" class="w-full bg-gray-700 text-white rounded-lg border-gray-600 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="all">All Users</option>
+                            <option value="vip">VIP User</option>
+                            <option value="normal">Normal User</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Location</label>
+                        <select id="preview-location" class="w-full bg-gray-700 text-white rounded-lg border-gray-600 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="all">All Locations</option>
+                            <option value="HN">Hanoi</option>
+                            <option value="HCM">Ho Chi Minh</option>
+                            <option value="DN">Da Nang</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Preview Container -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="mobile-preview-container">
+                    <div class="mobile-preview-header">
+                        <span>RideApp</span>
+                    </div>
+                    <div id="mobile-preview-content" class="mobile-preview-content">
+                        <!-- Preview content populated by JS -->
+                    </div>
+                    
+                    <!-- Floating Bubble (if enabled) -->
+                    <div id="preview-floating-bubble" class="hidden" style="position: absolute; bottom: 20px; right: 20px; width: 50px; height: 50px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Info -->
+            <div class="p-4 border-t border-gray-700 bg-gray-900">
+                <div class="text-xs text-gray-400 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span>Preview Mode:</span>
+                        <span id="preview-mode-label" class="text-blue-400">Real-time</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Device:</span>
+                        <span>iPhone 14 Pro</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Section Modal -->
+    <div id="add-section-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Add New Section</h3>
+                <p class="text-sm text-gray-500">Choose the type of section to add</p>
+            </div>
+            <div class="p-6 space-y-3">
+                <button class="add-section-option w-full p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center" data-type="banner">
+                    <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center mr-4">
+                        <i class="fas fa-image text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">Banner Section</p>
+                        <p class="text-sm text-gray-500">Promotional image banners</p>
+                    </div>
+                </button>
+                <button class="add-section-option w-full p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all flex items-center" data-type="service">
+                    <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center mr-4">
+                        <i class="fas fa-concierge-bell text-green-600 text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">Services Section</p>
+                        <p class="text-sm text-gray-500">List of available services</p>
+                    </div>
+                </button>
+                <button class="add-section-option w-full p-4 border-2 border-gray-200 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 transition-all flex items-center" data-type="promotion">
+                    <div class="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center mr-4">
+                        <i class="fas fa-percentage text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">Promotion Section</p>
+                        <p class="text-sm text-gray-500">Special offers and discounts</p>
+                    </div>
+                </button>
+                <button class="add-section-option w-full p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all flex items-center" data-type="content">
+                    <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mr-4">
+                        <i class="fas fa-newspaper text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">Content Section</p>
+                        <p class="text-sm text-gray-500">Articles and information</p>
+                    </div>
+                </button>
+            </div>
+            <div class="p-6 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancel-add-section" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        
+        let appState = {
+            sections: [
+                {
+                    id: 'section-1',
+                    name: 'Welcome Banner',
+                    type: 'banner',
+                    visible: true,
+                    userGroup: 'all',
+                    location: 'all',
+                    status: 'active',
+                    content: {
+                        title: { vi: 'Chào mừng đến với RideApp', en: 'Welcome to RideApp' },
+                        image: 'https://via.placeholder.com/400x200/3b82f6/ffffff?text=Welcome+Banner',
+                        action: { type: 'screen', value: '/promotions' },
+                        startDate: '2024-01-01T00:00:00',
+                        endDate: '2024-12-31T23:59:59'
+                    }
+                },
+                {
+                    id: 'section-2',
+                    name: 'Quick Services',
+                    type: 'service',
+                    visible: true,
+                    userGroup: 'all',
+                    location: 'all',
+                    status: 'active',
+                    content: {
+                        items: [
+                            { id: 'svc-1', name: { vi: 'Đặt xe', en: 'Book Ride' }, icon: 'fa-car', enabled: true },
+                            { id: 'svc-2', name: { vi: 'Giao hàng', en: 'Delivery' }, icon: 'fa-box', enabled: true },
+                            { id: 'svc-3', name: { vi: 'Thanh toán', en: 'Payment' }, icon: 'fa-credit-card', enabled: true },
+                            { id: 'svc-4', name: { vi: 'Hỗ trợ', en: 'Support' }, icon: 'fa-headset', enabled: true }
+                        ]
+                    }
+                },
+                {
+                    id: 'section-3',
+                    name: 'VIP Exclusive',
+                    type: 'vip',
+                    visible: true,
+                    userGroup: 'vip',
+                    location: 'all',
+                    status: 'active',
+                    content: {
+                        title: { vi: 'Ưu đãi VIP', en: 'VIP Exclusive Offers' },
+                        description: { vi: 'Dành riêng cho thành viên VIP', en: 'Exclusive for VIP members' }
+                    }
+                },
+                {
+                    id: 'section-4',
+                    name: 'Summer Promotions',
+                    type: 'promotion',
+                    visible: true,
+                    userGroup: 'all',
+                    location: 'all',
+                    status: 'scheduled',
+                    content: {
+                        items: [
+                            { id: 'promo-1', title: { vi: 'Giảm 20%', en: '20% Off' }, description: { vi: 'Cho chuyến đi đầu tiên', en: 'For first ride' }, discount: 20 },
+                            { id: 'promo-2', title: { vi: 'Mua 5 Tặng 1', en: 'Buy 5 Get 1 Free' }, description: { vi: 'Tích lũy chuyến đi', en: 'Accumulate rides' }, discount: 0 }
+                        ],
+                        startDate: '2024-06-01T00:00:00',
+                        endDate: '2024-08-31T23:59:59'
+                    }
+                },
+                {
+                    id: 'section-5',
+                    name: 'Travel Tips',
+                    type: 'content',
+                    visible: false,
+                    userGroup: 'all',
+                    location: 'all',
+                    status: 'inactive',
+                    content: {
+                        articles: [
+                            { id: 'art-1', title: { vi: 'Mẹo đặt xe nhanh', en: 'Quick Booking Tips' }, excerpt: { vi: 'Học cách đặt xe hiệu quả', en: 'Learn efficient booking' } }
+                        ]
+                    }
+                }
+            ],
+            appConfig: {
+                enableVIP: true,
+                enableSearch: true,
+                enableFloatingBubble: false,
+                enablePersonalization: true
+            },
+            previewSettings: {
+                userGroup: 'all',
+                location: 'all'
+            },
+            selectedSectionId: null
+        };
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSidebar('builder');
+            renderSectionsList();
+            renderMobilePreview();
+            setupEventListeners();
+            updateStats();
+        });
+
+        // ============================================
+        // RENDER FUNCTIONS
+        // ============================================
+        
+        function renderSectionsList() {
+            const container = document.getElementById('sections-list');
+            container.innerHTML = '';
+            
+            appState.sections.forEach((section, index) => {
+                const typeClass = `section-type-${section.type}`;
+                const isVisible = section.visible;
+                const isSelected = appState.selectedSectionId === section.id;
+                
+                const item = document.createElement('div');
+                item.className = `draggable-item p-3 rounded-lg border-2 ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} hover:border-blue-300 cursor-pointer transition-all`;
+                item.dataset.sectionId = section.id;
+                item.draggable = true;
+                
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center flex-1 min-w-0">
+                            <i class="fas fa-grip-vertical text-gray-400 mr-2 cursor-grab"></i>
+                            <span class="w-6 h-6 rounded ${typeClass} flex items-center justify-center mr-2 flex-shrink-0">
+                                <i class="fas ${getSectionTypeIcon(section.type)} text-xs"></i>
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-medium text-gray-800 text-sm truncate">${section.name}</p>
+                                <p class="text-xs text-gray-500 capitalize">${section.type} • ${section.userGroup}</p>
+                            </div>
+                        </div>
+                        <label class="toggle-switch ml-2 flex-shrink-0" onclick="event.stopPropagation()">
+                            <input type="checkbox" ${section.visible ? 'checked' : ''} onchange="toggleSectionVisibility('${section.id}')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => selectSection(section.id));
+                container.appendChild(item);
+            });
+            
+            // Initialize Sortable
+            new Sortable(container, {
+                animation: 150,
+                ghostClass: 'dragging',
+                onEnd: function(evt) {
+                    reorderSections(evt.oldIndex, evt.newIndex);
+                }
+            });
+        }
+        
+        function getSectionTypeIcon(type) {
+            const icons = {
+                banner: 'fa-image',
+                service: 'fa-concierge-bell',
+                promotion: 'fa-percentage',
+                content: 'fa-newspaper',
+                vip: 'fa-crown'
+            };
+            return icons[type] || 'fa-layer-group';
+        }
+        
+        function renderMobilePreview() {
+            const container = document.getElementById('mobile-preview-content');
+            const previewUserGroup = appState.previewSettings.userGroup;
+            const previewLocation = appState.previewSettings.location;
+            
+            let html = '';
+            
+            // Search bar (if enabled)
+            if (appState.appConfig.enableSearch) {
+                html += `
+                    <div class="mb-3">
+                        <div class="bg-gray-100 rounded-lg px-3 py-2 flex items-center">
+                            <i class="fas fa-search text-gray-400 mr-2"></i>
+                            <span class="text-gray-400 text-sm">Search...</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Render visible sections based on filters
+            appState.sections.forEach(section => {
+                if (!section.visible) return;
+                
+                // Filter by user group
+                if (section.userGroup !== 'all' && section.userGroup !== previewUserGroup && previewUserGroup !== 'all') {
+                    return;
+                }
+                
+                // Filter by location
+                if (section.location !== 'all' && section.location !== previewLocation && previewLocation !== 'all') {
+                    return;
+                }
+                
+                html += renderPreviewSection(section);
+            });
+            
+            container.innerHTML = html;
+            
+            // Update floating bubble visibility
+            const bubble = document.getElementById('preview-floating-bubble');
+            if (appState.appConfig.enableFloatingBubble) {
+                bubble.classList.remove('hidden');
+            } else {
+                bubble.classList.add('hidden');
+            }
+        }
+        
+        function renderPreviewSection(section) {
+            switch(section.type) {
+                case 'banner':
+                    return `
+                        <div class="mb-3 rounded-lg overflow-hidden shadow-sm">
+                            <img src="${section.content.image}" alt="${section.content.title.vi}" class="w-full h-32 object-cover">
+                        </div>
+                    `;
+                case 'service':
+                    return `
+                        <div class="mb-3">
+                            <div class="grid grid-cols-4 gap-2">
+                                ${section.content.items.filter(i => i.enabled).slice(0, 8).map(item => `
+                                    <div class="flex flex-col items-center p-2 bg-gray-50 rounded-lg">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
+                                            <i class="fas ${item.icon} text-blue-600 text-sm"></i>
+                                        </div>
+                                        <span class="text-xs text-gray-600 text-center truncate w-full">${item.name.vi}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                case 'promotion':
+                    return `
+                        <div class="mb-3">
+                            <h3 class="font-semibold text-gray-800 mb-2 text-sm">🔥 Promotions</h3>
+                            ${section.content.items.map(item => `
+                                <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-2 mb-2 border border-yellow-200">
+                                    <p class="font-semibold text-yellow-800 text-sm">${item.title.vi}</p>
+                                    <p class="text-xs text-yellow-600">${item.description.vi}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                case 'vip':
+                    if (appState.previewSettings.userGroup === 'vip' || appState.previewSettings.userGroup === 'all') {
+                        return `
+                            <div class="mb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-3 text-white">
+                                <p class="font-semibold text-sm">👑 ${section.content.title.vi}</p>
+                                <p class="text-xs opacity-90">${section.content.description.vi}</p>
+                            </div>
+                        `;
+                    }
+                    return '';
+                case 'content':
+                    return `
+                        <div class="mb-3">
+                            <h3 class="font-semibold text-gray-800 mb-2 text-sm">📰 Latest News</h3>
+                            ${section.content.articles.map(article => `
+                                <div class="bg-gray-50 rounded-lg p-2 mb-2">
+                                    <p class="font-medium text-gray-800 text-sm">${article.title.vi}</p>
+                                    <p class="text-xs text-gray-500">${article.excerpt.vi}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                default:
+                    return '';
+            }
+        }
+        
+        function renderEditor(section) {
+            const editorPanel = document.getElementById('editor-panel');
+            const noSelection = document.getElementById('no-selection-state');
+            
+            if (!section) {
+                editorPanel.classList.add('hidden');
+                noSelection.classList.remove('hidden');
+                return;
+            }
+            
+            noSelection.classList.add('hidden');
+            editorPanel.classList.remove('hidden');
+            
+            // Update header
+            document.getElementById('editor-title').textContent = section.name;
+            document.getElementById('editor-subtitle').textContent = `${capitalizeFirst(section.type)} Section`;
+            document.getElementById('editor-status').textContent = section.visible ? 'Active' : 'Hidden';
+            document.getElementById('editor-status').className = `px-3 py-1 rounded-full text-xs font-medium ${section.visible ? 'bg-green-500/20 text-green-100' : 'bg-gray-500/20 text-gray-100'}`;
+            
+            // Update form fields
+            document.getElementById('edit-section-name').value = section.name;
+            document.getElementById('edit-section-visible').checked = section.visible;
+            document.getElementById('edit-section-user-group').value = section.userGroup;
+            document.getElementById('edit-section-location').value = section.location;
+            
+            // Render dynamic content editor
+            renderDynamicEditor(section);
+        }
+        
+        function renderDynamicEditor(section) {
+            const container = document.getElementById('dynamic-editor');
+            
+            switch(section.type) {
+                case 'banner':
+                    container.innerHTML = `
+                        <h4 class="font-medium text-gray-800 flex items-center mb-4">
+                            <i class="fas fa-image mr-2 text-gray-400"></i>
+                            Banner Content
+                        </h4>
+                        
+                        <!-- Multi-language Title -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Banner Title</label>
+                            <div class="border rounded-lg overflow-hidden">
+                                <div class="flex border-b bg-gray-50">
+                                    <button type="button" class="lang-tab flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600" data-lang="vi">🇻🇳 Vietnamese</button>
+                                    <button type="button" class="lang-tab flex-1 px-4 py-2 text-sm font-medium text-gray-600" data-lang="en">🇺🇸 English</button>
+                                </div>
+                                <div class="p-3">
+                                    <input type="text" id="banner-title-vi" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="${section.content.title?.vi || ''}" placeholder="Tiêu đề tiếng Việt">
+                                    <input type="text" id="banner-title-en" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" value="${section.content.title?.en || ''}" placeholder="English title">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Image Upload -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
+                            <div class="image-upload-area" onclick="document.getElementById('banner-image-input').click()">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-600">Click to upload or drag image here</p>
+                                <p class="text-xs text-gray-500">Recommended: 400x200px</p>
+                                <input type="file" id="banner-image-input" class="hidden" accept="image/*" onchange="handleImageUpload(this)">
+                            </div>
+                            <img id="banner-image-preview" src="${section.content.image}" class="image-preview" alt="Preview">
+                        </div>
+                        
+                        <!-- Schedule -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                <input type="datetime-local" id="banner-start-date" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="${section.content.startDate || ''}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                <input type="datetime-local" id="banner-end-date" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="${section.content.endDate || ''}">
+                            </div>
+                        </div>
+                        
+                        <!-- Action -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tap Action</label>
+                            <select id="banner-action-type" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 mb-2" onchange="toggleActionInput()">
+                                <option value="none">No Action</option>
+                                <option value="screen" ${section.content.action?.type === 'screen' ? 'selected' : ''}>Open Screen</option>
+                                <option value="url" ${section.content.action?.type === 'url' ? 'selected' : ''}>Open URL</option>
+                                <option value="deeplink" ${section.content.action?.type === 'deeplink' ? 'selected' : ''}>Deep Link</option>
+                            </select>
+                            <input type="text" id="banner-action-value" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="${section.content.action?.value || ''}" placeholder="Enter screen path, URL, or deeplink">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'service':
+                    container.innerHTML = `
+                        <h4 class="font-medium text-gray-800 flex items-center mb-4">
+                            <i class="fas fa-concierge-bell mr-2 text-gray-400"></i>
+                            Service Items
+                        </h4>
+                        
+                        <div id="services-list-editor" class="space-y-3">
+                            ${section.content.items.map((item, idx) => `
+                                <div class="service-item p-3 border border-gray-200 rounded-lg bg-gray-50" data-item-id="${item.id}">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-grip-vertical text-gray-400 mr-2 cursor-grab"></i>
+                                            <span class="font-medium text-gray-700">Service ${idx + 1}</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <label class="text-xs text-gray-600">Enabled</label>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="updateServiceItem('${item.id}', 'enabled', this.checked)">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <button onclick="removeServiceItem('${item.id}')" class="text-red-500 hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">Name (VI)</label>
+                                            <input type="text" class="w-full rounded-lg border-gray-300 text-sm" value="${item.name.vi}" onchange="updateServiceItem('${item.id}', 'name_vi', this.value)">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">Name (EN)</label>
+                                            <input type="text" class="w-full rounded-lg border-gray-300 text-sm" value="${item.name.en}" onchange="updateServiceItem('${item.id}', 'name_en', this.value)">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="block text-xs text-gray-600 mb-1">Icon</label>
+                                        <select class="w-full rounded-lg border-gray-300 text-sm" onchange="updateServiceItem('${item.id}', 'icon', this.value)">
+                                            <option value="fa-car" ${item.icon === 'fa-car' ? 'selected' : ''}>🚗 Car</option>
+                                            <option value="fa-box" ${item.icon === 'fa-box' ? 'selected' : ''}>📦 Box</option>
+                                            <option value="fa-credit-card" ${item.icon === 'fa-credit-card' ? 'selected' : ''}>💳 Card</option>
+                                            <option value="fa-headset" ${item.icon === 'fa-headset' ? 'selected' : ''}>🎧 Headset</option>
+                                            <option value="fa-map-marker-alt" ${item.icon === 'fa-map-marker-alt' ? 'selected' : ''}>📍 Location</option>
+                                            <option value="fa-user" ${item.icon === 'fa-user' ? 'selected' : ''}>👤 User</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <button onclick="addServiceItem()" class="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-3 text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-plus mr-2"></i> Add Service Item
+                        </button>
+                    `;
+                    
+                    // Initialize sortable for service items
+                    new Sortable(document.getElementById('services-list-editor'), {
+                        animation: 150,
+                        handle: '.fa-grip-vertical',
+                        onEnd: function(evt) {
+                            // Reorder items in state
+                            const itemId = evt.item.dataset.itemId;
+                            // Handle reordering logic
+                        }
+                    });
+                    break;
+                    
+                case 'promotion':
+                    container.innerHTML = `
+                        <h4 class="font-medium text-gray-800 flex items-center mb-4">
+                            <i class="fas fa-percentage mr-2 text-gray-400"></i>
+                            Promotion Items
+                        </h4>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                <input type="datetime-local" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="${section.content.startDate || ''}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                <input type="datetime-local" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="${section.content.endDate || ''}">
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            ${section.content.items.map(item => `
+                                <div class="p-3 border border-yellow-200 rounded-lg bg-yellow-50">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-medium text-gray-700">${item.title.vi}</span>
+                                        <button class="text-red-500 hover:text-red-700">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">Title (VI)</label>
+                                            <input type="text" class="w-full rounded-lg border-gray-300 text-sm" value="${item.title.vi}">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">Title (EN)</label>
+                                            <input type="text" class="w-full rounded-lg border-gray-300 text-sm" value="${item.title.en}">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="block text-xs text-gray-600 mb-1">Description (VI)</label>
+                                        <textarea class="w-full rounded-lg border-gray-300 text-sm" rows="2">${item.description.vi}</textarea>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <button class="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-3 text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-plus mr-2"></i> Add Promotion
+                        </button>
+                    `;
+                    break;
+                    
+                case 'content':
+                    container.innerHTML = `
+                        <h4 class="font-medium text-gray-800 flex items-center mb-4">
+                            <i class="fas fa-newspaper mr-2 text-gray-400"></i>
+                            Content Articles
+                        </h4>
+                        
+                        <div class="space-y-3">
+                            ${section.content.articles.map(article => `
+                                <div class="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-medium text-gray-700">${article.title.vi}</span>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-blue-500 hover:text-blue-700">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-500 hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">Title (VI)</label>
+                                            <input type="text" class="w-full rounded-lg border-gray-300 text-sm" value="${article.title.vi}">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">Title (EN)</label>
+                                            <input type="text" class="w-full rounded-lg border-gray-300 text-sm" value="${article.title.en}">
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <button class="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-3 text-gray-500 hover:border-blue-500 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-plus mr-2"></i> Add Article
+                        </button>
+                    `;
+                    break;
+                    
+                case 'vip':
+                    container.innerHTML = `
+                        <h4 class="font-medium text-gray-800 flex items-center mb-4">
+                            <i class="fas fa-crown mr-2 text-gray-400"></i>
+                            VIP Content
+                        </h4>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                            <div class="border rounded-lg overflow-hidden">
+                                <div class="flex border-b bg-gray-50">
+                                    <button type="button" class="lang-tab flex-1 px-4 py-2 text-sm font-medium border-r bg-white text-blue-600" data-lang="vi">🇻🇳 Vietnamese</button>
+                                    <button type="button" class="lang-tab flex-1 px-4 py-2 text-sm font-medium text-gray-600" data-lang="en">🇺🇸 English</button>
+                                </div>
+                                <div class="p-3">
+                                    <input type="text" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="${section.content.title?.vi || ''}" placeholder="Tiêu đề tiếng Việt">
+                                    <input type="text" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 hidden" value="${section.content.title?.en || ''}" placeholder="English title">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" rows="3" placeholder="Enter description">${section.content.description?.vi || ''}</textarea>
+                        </div>
+                    `;
+                    break;
+                    
+                default:
+                    container.innerHTML = '<p class="text-gray-500 text-sm">No additional settings for this section type.</p>';
+            }
+            
+            // Setup language tab switching
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const parent = this.closest('.border.rounded-lg');
+                    const lang = this.dataset.lang;
+                    
+                    parent.querySelectorAll('.lang-tab').forEach(t => {
+                        t.classList.remove('bg-white', 'text-blue-600');
+                        t.classList.add('text-gray-600');
+                    });
+                    this.classList.remove('text-gray-600');
+                    this.classList.add('bg-white', 'text-blue-600');
+                    
+                    const inputs = parent.querySelectorAll('input, textarea');
+                    inputs.forEach(input => {
+                        if (input.id.endsWith('-vi')) {
+                            input.classList.toggle('hidden', lang !== 'vi');
+                        } else if (input.id.endsWith('-en')) {
+                            input.classList.toggle('hidden', lang !== 'en');
+                        }
+                    });
+                });
+            });
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        
+        function setupEventListeners() {
+            // Add section modal
+            document.getElementById('add-section-btn').addEventListener('click', () => {
+                document.getElementById('add-section-modal').classList.remove('hidden');
+            });
+            
+            document.getElementById('cancel-add-section').addEventListener('click', () => {
+                document.getElementById('add-section-modal').classList.add('hidden');
+            });
+            
+            // Add section options
+            document.querySelectorAll('.add-section-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const type = this.dataset.type;
+                    addNewSection(type);
+                    document.getElementById('add-section-modal').classList.add('hidden');
+                });
+            });
+            
+            // Close editor
+            document.getElementById('close-editor-btn').addEventListener('click', () => {
+                appState.selectedSectionId = null;
+                renderSectionsList();
+                renderEditor(null);
+            });
+            
+            // Editor field changes
+            document.getElementById('edit-section-name').addEventListener('input', function() {
+                if (appState.selectedSectionId) {
+                    updateSection(appState.selectedSectionId, { name: this.value });
+                }
+            });
+            
+            document.getElementById('edit-section-visible').addEventListener('change', function() {
+                if (appState.selectedSectionId) {
+                    updateSection(appState.selectedSectionId, { visible: this.checked });
+                }
+            });
+            
+            document.getElementById('edit-section-user-group').addEventListener('change', function() {
+                if (appState.selectedSectionId) {
+                    updateSection(appState.selectedSectionId, { userGroup: this.value });
+                }
+            });
+            
+            document.getElementById('edit-section-location').addEventListener('change', function() {
+                if (appState.selectedSectionId) {
+                    updateSection(appState.selectedSectionId, { location: this.value });
+                }
+            });
+            
+            // Preview controls
+            document.getElementById('preview-user-group').addEventListener('change', function() {
+                appState.previewSettings.userGroup = this.value;
+                renderMobilePreview();
+            });
+            
+            document.getElementById('preview-location').addEventListener('change', function() {
+                appState.previewSettings.location = this.value;
+                renderMobilePreview();
+            });
+            
+            // Feature toggles
+            document.getElementById('feature-vip').addEventListener('change', function() {
+                appState.appConfig.enableVIP = this.checked;
+                triggerAutosave();
+            });
+            
+            document.getElementById('feature-search').addEventListener('change', function() {
+                appState.appConfig.enableSearch = this.checked;
+                renderMobilePreview();
+                triggerAutosave();
+            });
+            
+            document.getElementById('feature-bubble').addEventListener('change', function() {
+                appState.appConfig.enableFloatingBubble = this.checked;
+                renderMobilePreview();
+                triggerAutosave();
+            });
+            
+            document.getElementById('feature-personalization').addEventListener('change', function() {
+                appState.appConfig.enablePersonalization = this.checked;
+                triggerAutosave();
+            });
+            
+            // Save all button
+            document.getElementById('save-all-btn').addEventListener('click', saveAllChanges);
+        }
+        
+        function selectSection(sectionId) {
+            appState.selectedSectionId = sectionId;
+            const section = appState.sections.find(s => s.id === sectionId);
+            renderSectionsList();
+            renderEditor(section);
+        }
+        
+        function toggleSectionVisibility(sectionId) {
+            const section = appState.sections.find(s => s.id === sectionId);
+            if (section) {
+                section.visible = !section.visible;
+                section.status = section.visible ? 'active' : 'inactive';
+                renderSectionsList();
+                renderMobilePreview();
+                updateStats();
+                triggerAutosave();
+            }
+        }
+        
+        function reorderSections(oldIndex, newIndex) {
+            const section = appState.sections.splice(oldIndex, 1)[0];
+            appState.sections.splice(newIndex, 0, section);
+            renderMobilePreview();
+            triggerAutosave();
+        }
+        
+        function addNewSection(type) {
+            const newSection = {
+                id: `section-${Date.now()}`,
+                name: `New ${capitalizeFirst(type)} Section`,
+                type: type,
+                visible: true,
+                userGroup: 'all',
+                location: 'all',
+                status: 'active',
+                content: getDefaultContentForType(type)
+            };
+            
+            appState.sections.push(newSection);
+            renderSectionsList();
+            renderMobilePreview();
+            updateStats();
+            selectSection(newSection.id);
+            triggerAutosave();
+        }
+        
+        function getDefaultContentForType(type) {
+            switch(type) {
+                case 'banner':
+                    return {
+                        title: { vi: 'New Banner', en: 'New Banner' },
+                        image: 'https://via.placeholder.com/400x200/3b82f6/ffffff?text=New+Banner',
+                        action: { type: 'none', value: '' },
+                        startDate: '',
+                        endDate: ''
+                    };
+                case 'service':
+                    return {
+                        items: [
+                            { id: `svc-${Date.now()}`, name: { vi: 'New Service', en: 'New Service' }, icon: 'fa-star', enabled: true }
+                        ]
+                    };
+                case 'promotion':
+                    return {
+                        items: [
+                            { id: `promo-${Date.now()}`, title: { vi: 'New Promotion', en: 'New Promotion' }, description: { vi: 'Description', en: 'Description' }, discount: 0 }
+                        ],
+                        startDate: '',
+                        endDate: ''
+                    };
+                case 'content':
+                    return {
+                        articles: [
+                            { id: `art-${Date.now()}`, title: { vi: 'New Article', en: 'New Article' }, excerpt: { vi: 'Excerpt', en: 'Excerpt' } }
+                        ]
+                    };
+                case 'vip':
+                    return {
+                        title: { vi: 'VIP Exclusive', en: 'VIP Exclusive' },
+                        description: { vi: 'Exclusive content for VIP members', en: 'Exclusive content for VIP members' }
+                    };
+                default:
+                    return {};
+            }
+        }
+        
+        function updateSection(sectionId, updates) {
+            const section = appState.sections.find(s => s.id === sectionId);
+            if (section) {
+                Object.assign(section, updates);
+                renderSectionsList();
+                renderMobilePreview();
+                updateStats();
+                triggerAutosave();
+            }
+        }
+        
+        function updateServiceItem(itemId, field, value) {
+            const section = appState.sections.find(s => s.type === 'service' && s.id === appState.selectedSectionId);
+            if (section) {
+                const item = section.content.items.find(i => i.id === itemId);
+                if (item) {
+                    if (field === 'enabled') {
+                        item.enabled = value;
+                    } else if (field === 'name_vi') {
+                        item.name.vi = value;
+                    } else if (field === 'name_en') {
+                        item.name.en = value;
+                    } else if (field === 'icon') {
+                        item.icon = value;
+                    }
+                    renderMobilePreview();
+                    triggerAutosave();
+                }
+            }
+        }
+        
+        function addServiceItem() {
+            const section = appState.sections.find(s => s.type === 'service' && s.id === appState.selectedSectionId);
+            if (section) {
+                section.content.items.push({
+                    id: `svc-${Date.now()}`,
+                    name: { vi: 'New Service', en: 'New Service' },
+                    icon: 'fa-star',
+                    enabled: true
+                });
+                renderDynamicEditor(section);
+                renderMobilePreview();
+                triggerAutosave();
+            }
+        }
+        
+        function removeServiceItem(itemId) {
+            const section = appState.sections.find(s => s.type === 'service' && s.id === appState.selectedSectionId);
+            if (section) {
+                section.content.items = section.content.items.filter(i => i.id !== itemId);
+                renderDynamicEditor(section);
+                renderMobilePreview();
+                triggerAutosave();
+            }
+        }
+        
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('banner-image-preview').src = e.target.result;
+                    // Update state
+                    const section = appState.sections.find(s => s.id === appState.selectedSectionId);
+                    if (section) {
+                        section.content.image = e.target.result;
+                        renderMobilePreview();
+                        triggerAutosave();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function updateStats() {
+            const activeCount = appState.sections.filter(s => s.visible).length;
+            const inactiveCount = appState.sections.filter(s => !s.visible).length;
+            document.getElementById('active-count').textContent = activeCount;
+            document.getElementById('inactive-count').textContent = inactiveCount;
+        }
+        
+        function triggerAutosave() {
+            const indicator = document.getElementById('autosave-indicator');
+            indicator.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+            indicator.className = 'text-sm text-gray-500 flex items-center';
+            
+            setTimeout(() => {
+                indicator.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Saved';
+            }, 1000);
+        }
+        
+        function saveAllChanges() {
+            const btn = document.getElementById('save-all-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+            btn.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                console.log('Saving state:', JSON.stringify(appState, null, 2));
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i> Saved!';
+                btn.className = 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors';
+                }, 2000);
+            }, 1000);
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+    </script>
+</body>
+</html>
